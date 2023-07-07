@@ -22,3 +22,24 @@ async def kb_client_main_menu():
 #              END MAIN MENU
 # =======================================
 
+
+# =======================================
+#                  MENU
+# =======================================
+async def kb_client_menu_menu():
+    """Главное меню заведения"""
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    b1 = KeyboardButton("🍔 Бургер")
+    b2 = KeyboardButton("🌯 Шаверма")
+    b3 = KeyboardButton("🌭 Хот-Дог")
+    b4 = KeyboardButton("🌱 Vegan")
+    b5 = KeyboardButton("🍟 Закуски")
+    b6 = KeyboardButton("🥤Напитки")
+    b7 = KeyboardButton("🏠 На главную")
+    kb.row(b1, b2, b3).add(b4, b5, b6).add(b7)
+    return kb
+
+# =======================================
+#                 END MENU
+# =======================================
+
