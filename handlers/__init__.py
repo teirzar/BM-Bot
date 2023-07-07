@@ -1,0 +1,1 @@
+from handlers.client_message import register_handlers_client
