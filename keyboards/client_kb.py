@@ -43,3 +43,22 @@ async def kb_client_menu_menu():
 #                 END MENU
 # =======================================
 
+
+# =======================================
+#                SETTINGS
+# =======================================
+
+async def kb_client_settings_menu():
+    """Меню настроек"""
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    b1 = KeyboardButton("⚙ Изменить телефон")
+    b2 = KeyboardButton("⚙ Изменить имя")
+    b3 = KeyboardButton("✏️ Написать нам")
+    b4 = KeyboardButton("🔔 Уведомления")
+    b5 = KeyboardButton("🏠 На главную")
+    kb.row(b1, b2).add(b3).add(b4, b5)
+    return kb
+
+# =======================================
+#               END SETTINGS
+# =======================================
