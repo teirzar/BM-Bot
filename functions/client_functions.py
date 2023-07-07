@@ -4,7 +4,7 @@ from config import users
 
 # get telegram id
 async def get_tg_id(message: types.Message | types.CallbackQuery) -> int:
-    """Возвращает ТГ айди"""
+    """Возвращает telegram id пользователя"""
     return int(message['from'].id)
 
 
@@ -16,7 +16,7 @@ async def get_user_id(message: types.Message | types.CallbackQuery) -> int:
 
 # get admins
 async def get_admins() -> tuple:
-    """Возвращает кортеж из администраторов бота"""
+    """Возвращает кортеж из администраторов бота, обращается к таблице users из базы данных"""
     admins = users.print_table('tg_id', where='status = 99')
     if admins:
         tpl_out = (el[0] for el in admins)
