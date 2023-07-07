@@ -16,10 +16,10 @@ async def cmd_client_start_menu(message: types.Message):
         username, name = message["from"].username, message["from"].first_name
         text = f" Новый пользователь {name}! TG: {username} ID_{tg_id}"
         users.write('tg_id', 'username', 'name', values=f'{tg_id}, "{username}", "{name}"')
-        add_log(text)
+        await add_log(text)
         [await bot.send_message(admin, text) for admin in await get_admins()]
         return await bot.send_message(tg_id, START_MESSAGE, parse_mode='html', reply_markup=await kb_client_main_menu())
-    add_log(f"ID_{await get_user_id(message)} зашел в главное меню")
+    await add_log(f"ID_{await get_user_id(message)} зашел в главное меню")
     return await bot.send_message(tg_id, "Главное меню", reply_markup=await kb_client_main_menu())
 
 # =======================================

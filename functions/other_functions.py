@@ -2,17 +2,17 @@ from datetime import datetime
 
 
 # current time
-def get_time() -> str:
+async def get_time() -> str:
     """Возвращает строку времени в формате ГГГГ-ММ-ДД ЧЧ:ММ"""
     return datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
 # logging
-def add_log(string) -> None:
+async def add_log(string) -> None:
     """Функция логирования.
     Вносит в txt файл данные в формате 'Время: событие' """
     with open('logs/log.txt', 'a') as log:
-        text = f'{get_time()}: {string}\n'
+        text = f'{await get_time()}: {string}\n'
         log.write(text)
 
 

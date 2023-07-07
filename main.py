@@ -3,7 +3,7 @@ from functions import add_log
 
 
 async def on_startup(_):
-    add_log("!! Бот запущен !!")
+    await add_log("!! Бот запущен !!")
     print("Бот запущен")
 
 
