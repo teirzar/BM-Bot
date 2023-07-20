@@ -82,6 +82,7 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(cmd_client_static_menu, Text(equals='👤 Мой профиль'))
     dp.register_message_handler(cmd_client_static_menu, Text(equals="🧾 Мои заказы"))
 
-    dp.register_message_handler(cmd_client_static_submenu, commands=['menu', 'settings', 'orders'])
+    dp.register_message_handler(cmd_client_static_submenu, commands=['menu', 'settings'])
     dp.register_message_handler(cmd_client_static_submenu, Text(equals="🍔 Меню ресторана 🌯"))
     dp.register_message_handler(cmd_client_static_submenu, Text(equals="⚙ Настройки"))
+
