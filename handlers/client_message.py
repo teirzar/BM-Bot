@@ -3,6 +3,7 @@ from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
 from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
 from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
+from keyboards import kb_client_inline_menu
 
 
 # =======================================
@@ -101,7 +102,7 @@ async def cmd_client_cafe_menu(message: types.Message):
     text = f"Вы выбрали {message.text}. Далее выберите товарную позицию:"
     food_type = await get_type_food_id(message.text)
     await add_log(f"ID_{user_id} выбрал {message.text[1:]}")
-    await bot.send_message(tg_id, text)
+    await bot.send_message(tg_id, text, reply_markup=await kb_client_inline_menu(food_type, tg_id))
 
 
 # =======================================
