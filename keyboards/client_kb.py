@@ -24,7 +24,7 @@ async def kb_client_main_menu():
 
 
 # =======================================
-#                  MENU
+#               CAFE MENU
 # =======================================
 async def kb_client_cafe_menu():
     """Главное меню заведения"""
@@ -51,7 +51,7 @@ async def kb_client_cafe_menu_option(b1, b2):
 
 
 # =======================================
-#                 END MENU
+#              END CAFE MENU
 # =======================================
 
 
