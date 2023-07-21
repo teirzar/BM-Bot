@@ -1,8 +1,8 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
-from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text
-from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_menu_menu
+from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
+from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
 
 
 # =======================================
@@ -56,8 +56,8 @@ async def cmd_client_static_submenu(message: types.Message):
     user_id, tg_id = await get_user_id(message), await get_tg_id(message)
 
     match message.text:
-        case "🍔 Меню ресторана 🌯" | "/menu":
-            text, kb = "Меню ресторана", await kb_client_menu_menu()
+        case "🍔 Меню ресторана 🌯" | "/menu" | "⬅️ Назад":
+            text, kb = "Меню ресторана", await kb_client_cafe_menu()
         case "⚙ Настройки" | "/settings":
             text, kb = "Настройки", await kb_client_settings_menu()
 
@@ -68,6 +68,46 @@ async def cmd_client_static_submenu(message: types.Message):
 # =======================================
 #               END STATIC
 # =======================================
+
+
+# =======================================
+#               CAFE MENU
+# =======================================
+
+async def cmd_client_cafe_menu_option(message: types.Message):
+    """Функция для вызова уточнения выбора в меню заведения"""
+    user_id, tg_id = await get_user_id(message), await get_tg_id(message)
+    match message.text:
+        case "🌯 Шаверма":
+            text = "Обратите внимание!\n" \
+                   "Куриное филе в шавермах нашего заведения маринуется поварами и готовится на гриле.\n" \
+                   "Всегда свежее филе готовится специально для вас в момент заказа, " \
+                   "мы не используем вертел, где мясо портится часами на открытом воздухе.\n" \
+                   "Попробуйте сами и убедитесь в неповторимом вкусе!"
+            b1, b2 = "🥗 Шаверма на тарелке", "🌯 Шаверма в лаваше"
+        case "🌭 Хот-Дог":
+            text = "Вы можете заказать Хот-дог как в стандартной булочке, так и в лаваше."
+            b1, b2 = "🌭 Хот-Дог стандартный", "🫔 Хот-Дог в лаваше"
+        case "🥤Напитки":
+            text = "Выберите тип напитка."
+            b1, b2 = "☕Горячие напитки", "🥤Холодные напитки"
+    await add_log(f"ID_{user_id} зашел в подвыбор меню ресторана в категории {message.text[1:].strip()}")
+    await bot.send_message(tg_id, text, reply_markup=await kb_client_cafe_menu_option(b1, b2))
+
+
+async def cmd_client_cafe_menu(message: types.Message):
+    """Функция для вызова инлайн меню товарных позиций"""
+    user_id, tg_id = await get_user_id(message), await get_tg_id(message)
+    text = f"Вы выбрали {message.text}. Далее выберите товарную позицию:"
+    food_type = await get_type_food_id(message.text)
+    await add_log(f"ID_{user_id} выбрал {message.text[1:]}")
+    await bot.send_message(tg_id, text)
+
+
+# =======================================
+#             END CAFE MENU
+# =======================================
+
 
 # ====================== LOADING ======================
 def register_handlers_client(dp: Dispatcher):
@@ -84,5 +124,22 @@ def register_handlers_client(dp: Dispatcher):
 
     dp.register_message_handler(cmd_client_static_submenu, commands=['menu', 'settings'])
     dp.register_message_handler(cmd_client_static_submenu, Text(equals="🍔 Меню ресторана 🌯"))
+    dp.register_message_handler(cmd_client_static_submenu, Text(equals="⬅️ Назад"))
     dp.register_message_handler(cmd_client_static_submenu, Text(equals="⚙ Настройки"))
+
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🍔 Бургер"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🌱 Vegan"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🍟 Закуски"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🥗 Шаверма на тарелке"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🌯 Шаверма в лаваше"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🌭 Хот-Дог стандартный"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🫔 Хот-Дог в лаваше"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="☕Горячие напитки"))
+    dp.register_message_handler(cmd_client_cafe_menu, Text(equals="🥤Холодные напитки"))
+
+    dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🌯 Шаверма"))
+    dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🌭 Хот-Дог"))
+    dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🥤Напитки"))
+
+
 

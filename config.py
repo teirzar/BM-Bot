@@ -18,7 +18,7 @@ users = DBconnect("users", src)
 messages = DBconnect("messages", src)
 orders = DBconnect("orders", src)
 cafe = DBconnect("cafe", src)
-types = DBconnect("types", src)
+types_base = DBconnect("types", src)
 bonus = DBconnect("bonus", src)
 
 

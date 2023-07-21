@@ -1,5 +1,5 @@
 from aiogram import types
-from config import users, bonus
+from config import users, bonus, types_base
 
 
 # get telegram id
@@ -52,3 +52,10 @@ async def get_prev_orders(user_id) -> str:
     """Возвращает текст о последних заказах пользователя, если его нет, возвращает текст о том, что список пуст.
     Необходимо для функции 'Мои заказы' """
     return "Ваши заказы: В РАЗРАБОТКЕ"
+
+
+async def get_type_food_id(text) -> int:
+    """Функция возвращает ID типа товарной позиции,
+    для дальнейшего вызова соответствующего инлайна по запросу пользователя"""
+    food_type = types_base.print_table('typ', where=f'base = "cafe" and name = "{text[1:].strip()}"')
+    return food_type[0][0]

@@ -26,7 +26,7 @@ async def kb_client_main_menu():
 # =======================================
 #                  MENU
 # =======================================
-async def kb_client_menu_menu():
+async def kb_client_cafe_menu():
     """Главное меню заведения"""
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     b1 = KeyboardButton("🍔 Бургер")
@@ -38,6 +38,17 @@ async def kb_client_menu_menu():
     b7 = KeyboardButton("🏠 На главную")
     kb.row(b1, b2, b3).add(b4, b5, b6).add(b7)
     return kb
+
+
+async def kb_client_cafe_menu_option(b1, b2):
+    """Подменю, выбор категории в меню заведения"""
+    kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    b1, b2 = KeyboardButton(b1), KeyboardButton(b2)
+    b3 = KeyboardButton("⬅️ Назад")
+    b4 = KeyboardButton("🏠 На главную")
+    kb.add(b1).add(b2).row(b3, b4)
+    return kb
+
 
 # =======================================
 #                 END MENU
