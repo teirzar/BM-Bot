@@ -1,5 +1,5 @@
 from aiogram import types
-from config import users, bonus, types_base
+from config import users, bonus, types_base, cafe
 
 
 # get telegram id
@@ -59,3 +59,19 @@ async def get_type_food_id(text) -> int:
     для дальнейшего вызова соответствующего инлайна по запросу пользователя"""
     food_type = types_base.print_table('typ', where=f'base = "cafe" and name = "{text[1:].strip()}"')
     return food_type[0][0]
+
+
+async def get_food_kb_info(food_id, user_id) -> tuple:
+    """"Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
+    Содержит информацию о лайках, дизлайках на блюде, тип блюда, количество позиций блюда у пользователя в корзине,
+    стоимость всех блюд пользователя"""
+    typ, dislike, like = cafe.print_table('type', 'likes', 'dislikes', where=f'id = {food_id}')
+    dislike, like = len(dislike.split()), len(like.split())
+    #
+    # В РАЗРАБОТКЕ КОРЗИНА
+    #
+    basket, count = 0, 0
+    #
+    #
+    #
+    return typ, dislike, like, basket, count

@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from functions import get_admins
+from functions import get_admins, get_food_kb_info
 from config import cafe
 
 
@@ -43,6 +43,31 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
                 InlineKeyboardButton("🗑 Очистить", callback_data='edit')
                 )
     return ikb
+
+
+async def kb_client_inline_menu_info(food_id, user_id):
+    """Карточка товара, подробная информация о товаре"""
+    typ, dislike, like, basket, count = await get_food_kb_info(food_id, user_id)
+    ikb = InlineKeyboardMarkup()
+    b1 = InlineKeyboardButton(f"👎 {dislike}", callback_data=f"dislike")
+    b2 = InlineKeyboardButton("➖", callback_data=f"minus")
+    b3 = InlineKeyboardButton(f"🍴 {count}", callback_data=f"basket")
+    b4 = InlineKeyboardButton("➕", callback_data=f"plus")
+    b5 = InlineKeyboardButton(f"👍 {like}", callback_data=f"like")
+    ikb.row(b1, b2, b3, b4, b5)
+    if basket:
+        b6 = InlineKeyboardButton(f"➕🍟", callback_data="snack")
+        b7 = InlineKeyboardButton(f"🛒{basket}р.", callback_data=f"buying_start")
+        b8 = InlineKeyboardButton(f"➕🥤 ", callback_data="drink")
+        if int(typ) not in (40, 50, 60):
+            ikb.add(b6, b7, b8)
+        elif int(typ) == 40:
+            return ikb.add(b8, b7, btclose)
+        else:
+            return ikb.add(b6, b7, btclose)
+    ikb.add(btclose)
+    return ikb
+
 
 # =======================================
 #              END CAFE MENU

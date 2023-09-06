@@ -4,4 +4,5 @@ from functions.client_functions import (get_tg_id,
                                         get_admins,
                                         get_profile_text,
                                         get_prev_orders,
-                                        get_type_food_id)
+                                        get_type_food_id,
+                                        get_food_kb_info)
