@@ -6,4 +6,6 @@ from functions.client_functions import (get_tg_id,
                                         get_prev_orders,
                                         get_type_food_id,
                                         get_food_kb_info,
-                                        get_food_text)
+                                        get_food_text,
+                                        set_order,
+                                        get_count)

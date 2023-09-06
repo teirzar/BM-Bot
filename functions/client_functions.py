@@ -1,5 +1,6 @@
 from aiogram import types
-from config import users, bonus, types_base, cafe
+from config import users, bonus, types_base, cafe, orders
+from functions import get_time
 
 
 # get telegram id
@@ -85,3 +86,54 @@ async def get_food_text(food_id) -> tuple:
     pt = "гр" if type_food != 50 else "мл"
     text = f"<b>{name}\n{weight} {pt}., {price}руб.</b>\n\nОписание:\n{caption}\n\nСостав:\n{composition}"
     return text, image
+
+
+async def get_basket(user_id, lst=None):
+    """Возвращает корзину пользователя в виде словаря, где ключ - id блюда, а значение - количество товарных позиций"""
+    if not lst:
+        lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
+    basket = {el.split(":")[0]:int(el.split(":")[1]) for el in lst.split()}
+    return basket
+
+
+async def set_order(user_id, food_id, cmd) -> str | int:
+    """Функция для изменения состояния заказа в корзине, выбор действия с товаром и реализация действия"""
+    if (user_id, ) not in orders.print_table('user_id'):
+        orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
+
+    order_id, current_lst = orders.print_table('id', 'body', where=f'user_id = {user_id} and status = 0')[0]
+    current_basket = await get_basket(user_id, current_lst) if current_lst else {}
+
+    match cmd:
+        case "plus":
+            if food_id not in current_basket:
+                if len(current_basket) > 11:
+                    return "Нельзя одновременно добавить более 12 различных товаров!"
+                new_food = current_lst + f" {food_id}:1"
+                orders.update(f'body = "{new_food}"', where=f'id = {order_id}')
+                return 1
+            if current_basket[food_id] + 1 > 15:
+                return "Нельзя одновременно добавить более 15 порций одного блюда!"
+            current_basket[food_id] += 1
+        case "minus":
+            ...
+        case "delete":
+            if food_id not in current_basket:
+                return "Товар отсутствует в корзине!"
+            current_basket.pop(food_id)
+
+    orders.update(f'body = "{" ".join([f"{f}:{c}" for f, c in current_basket.items()])}"', where=f'id = {order_id}')
+    return current_basket[food_id] if cmd != 'delete' else 0
+
+
+async def get_count(tg_id, current_id) -> tuple:
+    """Функция для того, чтобы узнать какое количество конкретных позиций у пользователя в заказе,
+    а так же стоимость и количество ВСЕХ товаров в корзине"""
+    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
+    current_lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
+    basket = await get_basket(user_id, current_lst)
+    basket_count, food_count = len(basket), 0
+    if current_id and str(current_id) in basket:
+        food_count = basket[str(current_id)]
+    total_price = sum([cafe.print_table('price', where=f'id = {k}')[0][0] * int(v) for k, v in basket.items()])
+    return basket_count, total_price, food_count

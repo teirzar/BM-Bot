@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from functions import get_admins, get_food_kb_info
+from functions import get_admins, get_food_kb_info, get_count
 from config import cafe
 
 
@@ -17,6 +17,7 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
     lst = cafe.print_table('id', 'name', 'weight', 'price', 'status', where=f'type = {type_food}')
     pt = "гр" if type_food != 50 else "мл"
     is_admin = tg_id in await get_admins()
+    basket_count, total_price, food_count = await get_count(tg_id, current_id)
     for i, n, w, p, s in lst:
         if s or is_admin:
             text = f"{n} ({w}{pt}), {p} руб."
@@ -26,20 +27,20 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
 
         if current_id == i:
             if is_admin:
-                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}__'),
+                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}'),
                         InlineKeyboardButton(" ❌" if s else " ✅", callback_data='s'),
                         InlineKeyboardButton("✏", callback_data='edit')
                         )
             else:
-                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}__'),
-                        InlineKeyboardButton("➖", callback_data='s'),
-                        InlineKeyboardButton("0", callback_data='edit'),
-                        InlineKeyboardButton("➕", callback_data='i'),
-                        InlineKeyboardButton(" ❌", callback_data='s')
+                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}'),
+                        InlineKeyboardButton("➖", callback_data=f'cm_food_{i}_minus_{type_food}'),
+                        InlineKeyboardButton(f"{food_count}", callback_data=f'cm_show_'),
+                        InlineKeyboardButton("➕", callback_data=f'cm_food_{i}_plus_{type_food}'),
+                        InlineKeyboardButton(" ❌", callback_data=f'cm_food_{i}_delete_{type_food}')
                         )
     if not is_admin:
         ikb.row(InlineKeyboardButton("💵 Заказ", callback_data='i'),
-                InlineKeyboardButton("🛒 0", callback_data='s'),
+                InlineKeyboardButton(f"🛒 {basket_count}, {total_price}р.", callback_data='s'),
                 InlineKeyboardButton("🗑 Очистить", callback_data='edit')
                 )
     return ikb
