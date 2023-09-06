@@ -26,12 +26,12 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
 
         if current_id == i:
             if is_admin:
-                ikb.row(InlineKeyboardButton("ℹ", callback_data='i'),
+                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}__'),
                         InlineKeyboardButton(" ❌" if s else " ✅", callback_data='s'),
                         InlineKeyboardButton("✏", callback_data='edit')
                         )
             else:
-                ikb.row(InlineKeyboardButton("ℹ", callback_data='i'),
+                ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}__'),
                         InlineKeyboardButton("➖", callback_data='s'),
                         InlineKeyboardButton("0", callback_data='edit'),
                         InlineKeyboardButton("➕", callback_data='i'),
@@ -51,13 +51,13 @@ async def kb_client_inline_menu_info(food_id, user_id):
     ikb = InlineKeyboardMarkup()
     b1 = InlineKeyboardButton(f"👎 {dislike}", callback_data=f"dislike")
     b2 = InlineKeyboardButton("➖", callback_data=f"minus")
-    b3 = InlineKeyboardButton(f"🍴 {count}", callback_data=f"basket")
+    b3 = InlineKeyboardButton(f"🛒 {count}", callback_data=f"basket")
     b4 = InlineKeyboardButton("➕", callback_data=f"plus")
     b5 = InlineKeyboardButton(f"👍 {like}", callback_data=f"like")
     ikb.row(b1, b2, b3, b4, b5)
     if basket:
         b6 = InlineKeyboardButton(f"➕🍟", callback_data="snack")
-        b7 = InlineKeyboardButton(f"🛒{basket}р.", callback_data=f"buying_start")
+        b7 = InlineKeyboardButton(f"$ {basket}р.", callback_data=f"buying_start")
         b8 = InlineKeyboardButton(f"➕🥤 ", callback_data="drink")
         if int(typ) not in (40, 50, 60):
             ikb.add(b6, b7, b8)

@@ -65,7 +65,7 @@ async def get_food_kb_info(food_id, user_id) -> tuple:
     """"Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
     Содержит информацию о лайках, дизлайках на блюде, тип блюда, количество позиций блюда у пользователя в корзине,
     стоимость всех блюд пользователя"""
-    typ, dislike, like = cafe.print_table('type', 'likes', 'dislikes', where=f'id = {food_id}')
+    typ, dislike, like = cafe.print_table('type', 'likes', 'dislikes', where=f'id = {food_id}')[0]
     dislike, like = len(dislike.split()), len(like.split())
     #
     # В РАЗРАБОТКЕ КОРЗИНА
@@ -75,3 +75,13 @@ async def get_food_kb_info(food_id, user_id) -> tuple:
     #
     #
     return typ, dislike, like, basket, count
+
+
+async def get_food_text(food_id) -> tuple:
+    """Функция, предназначенная для вывода текста о товаре и ссылки на картинку в виде кортежа"""
+    name, caption, composition, weight, price, image, type_food = \
+        cafe.print_table('name', 'caption', 'composition', 'weight', 'price', 'image', 'type',
+                         where=f'id = {food_id}')[0]
+    pt = "гр" if type_food != 50 else "мл"
+    text = f"<b>{name}\n{weight} {pt}., {price}руб.</b>\n\nОписание:\n{caption}\n\nСостав:\n{composition}"
+    return text, image
