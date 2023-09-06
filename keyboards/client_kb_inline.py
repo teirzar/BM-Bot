@@ -22,7 +22,7 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
             text = f"{n} ({w}{pt}), {p} руб."
             if is_admin:
                 text = f'{n + (" ✅" if s else " ❌")}, {p} р.'
-            ikb.add(InlineKeyboardButton(text, callback_data=f'{i}'))
+            ikb.add(InlineKeyboardButton(text, callback_data=f'cm_current_{i}_{type_food}_{current_id}'))
 
         if current_id == i:
             if is_admin:
