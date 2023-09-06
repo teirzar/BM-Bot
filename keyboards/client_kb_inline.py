@@ -38,8 +38,8 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
                         InlineKeyboardButton(" ❌", callback_data='s')
                         )
     if not is_admin:
-        ikb.row(InlineKeyboardButton("🛒 В корзину", callback_data='i'),
-                InlineKeyboardButton("0", callback_data='s'),
+        ikb.row(InlineKeyboardButton("💵 Заказ", callback_data='i'),
+                InlineKeyboardButton("🛒 0", callback_data='s'),
                 InlineKeyboardButton("🗑 Очистить", callback_data='edit')
                 )
     return ikb
@@ -90,7 +90,7 @@ async def kb_client_basket(basket):
         b5 = InlineKeyboardButton("+", callback_data=f"plus")
         b6 = InlineKeyboardButton("x", callback_data=f"delete")
         ikb.add(b1).row(b2, b3, b4, b5, b6)
-    ikb.add(InlineKeyboardButton("К оформлению.", callback_data='buying_start'))
+    ikb.add(InlineKeyboardButton("💵 К оформлению.", callback_data='buying_start'))
     return ikb
 
 
