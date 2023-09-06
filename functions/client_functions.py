@@ -138,3 +138,13 @@ async def get_count(tg_id, current_id) -> tuple:
         food_count = basket[str(current_id)]
     total_price = sum([cafe.print_table('price', where=f'id = {k}')[0][0] * int(v) for k, v in basket.items()])
     return basket_count, total_price, food_count
+
+
+async def clear_basket(user_id) -> str | int:
+    """Функция для полной очистки корзины"""
+    lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
+    if lst:
+        orders.update('body = ""', where=f'user_id = {user_id} and status = 0')
+        return "Корзина была очищена!"
+    return 0
+
