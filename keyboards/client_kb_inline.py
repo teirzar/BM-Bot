@@ -72,3 +72,28 @@ async def kb_client_inline_menu_info(food_id, user_id):
 # =======================================
 #              END CAFE MENU
 # =======================================
+
+
+# =======================================
+#                 BASKET
+# =======================================
+
+
+async def kb_client_basket(basket):
+    """Клавиатура корзины"""
+    ikb = InlineKeyboardMarkup()
+    for i, count in basket.items():
+        b1 = InlineKeyboardButton(cafe.print_table('name', where=f'id = {i}')[0][0], callback_data=f'plus')
+        b2 = InlineKeyboardButton("i", callback_data=f"info")
+        b3 = InlineKeyboardButton("-", callback_data=f"minus")
+        b4 = InlineKeyboardButton(f"{count} шт.", callback_data=f"u_vas_v_korzine_{count}_sht")
+        b5 = InlineKeyboardButton("+", callback_data=f"plus")
+        b6 = InlineKeyboardButton("x", callback_data=f"delete")
+        ikb.add(b1).row(b2, b3, b4, b5, b6)
+    ikb.add(InlineKeyboardButton("К оформлению.", callback_data='buying_start'))
+    return ikb
+
+
+# =======================================
+#               END BASKET
+# =======================================
