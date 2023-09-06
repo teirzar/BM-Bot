@@ -115,15 +115,16 @@ async def set_order(user_id, food_id, cmd) -> str | int:
             if current_basket[food_id] + 1 > 15:
                 return "Нельзя одновременно добавить более 15 порций одного блюда!"
             current_basket[food_id] += 1
-        case "minus":
-            ...
-        case "delete":
+        case "minus" | "delete":
             if food_id not in current_basket:
                 return "Товар отсутствует в корзине!"
-            current_basket.pop(food_id)
+            if cmd == "delete" or not current_basket[food_id] - 1:
+                current_basket.pop(food_id)
+            else:
+                current_basket[food_id] -= 1
 
     orders.update(f'body = "{" ".join([f"{f}:{c}" for f, c in current_basket.items()])}"', where=f'id = {order_id}')
-    return current_basket[food_id] if cmd != 'delete' else 0
+    return current_basket.get(food_id, 0)
 
 
 async def get_count(tg_id, current_id) -> tuple:
