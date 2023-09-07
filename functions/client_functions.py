@@ -34,7 +34,7 @@ async def get_profile_text(user_id) -> str:
     status = list(bonus_dic.keys())
     total_prices = list(bonus_dic.values())
     need_money = None
-    if users_dict['status'] != 3:
+    if users_dict['status'] not in (3, 99):
         need_money = total_prices[users_dict['status'] + 1] - users_dict['total_price']
     next_status = "\n<i>До статуса '" + status[users_dict['status']+1] + f"': {need_money}р.</i>" if need_money else ''
     text = f"""<b>Ваш профиль</b>\n
@@ -42,7 +42,7 @@ async def get_profile_text(user_id) -> str:
     📇 Имя: {users_dict['name']}
     📱 Телефон: {users_dict['phone'] if users_dict['phone'] else "Укажите телефон в настройках!"}
     💰 Бонусы: {users_dict['bonus']}
-    😎 Статус: {status[users_dict['status']]}{next_status}
+    😎 Статус: {status[users_dict['status']] if users_dict['status'] != 99 else 'ADMIN'}{next_status}
     🔔 Уведомления: {"вкл." if users_dict['notification'] else "выкл."}
     \nИзменить данные можно в\n⚙ Настройках (/settings)"""
     return text
@@ -62,20 +62,13 @@ async def get_type_food_id(text) -> int:
     return food_type[0][0]
 
 
-async def get_food_kb_info(food_id, user_id) -> tuple:
+async def get_food_kb_info(food_id) -> tuple:
     """"Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
-    Содержит информацию о лайках, дизлайках на блюде, тип блюда, количество позиций блюда у пользователя в корзине,
-    стоимость всех блюд пользователя"""
-    typ, dislike, like = cafe.print_table('type', 'likes', 'dislikes', where=f'id = {food_id}')[0]
+    Содержит информацию о лайках, дизлайках на блюде, тип блюда"""
+    typ, dislike, like = cafe.print_table('type', 'dislikes', 'likes', where=f'id = {food_id}')[0]
     dislike, like = len(dislike.split()), len(like.split())
-    #
-    # В РАЗРАБОТКЕ КОРЗИНА
-    #
-    basket, count = 0, 0
-    #
-    #
-    #
-    return typ, dislike, like, basket, count
+
+    return typ, dislike, like
 
 
 async def get_food_text(food_id) -> tuple:
@@ -98,9 +91,6 @@ async def get_basket(user_id, lst=None):
 
 async def set_order(user_id, food_id, cmd) -> str | int:
     """Функция для изменения состояния заказа в корзине, выбор действия с товаром и реализация действия"""
-    if (user_id, ) not in orders.print_table('user_id'):
-        orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
-
     order_id, current_lst = orders.print_table('id', 'body', where=f'user_id = {user_id} and status = 0')[0]
     current_basket = await get_basket(user_id, current_lst) if current_lst else {}
 
@@ -127,10 +117,14 @@ async def set_order(user_id, food_id, cmd) -> str | int:
     return current_basket.get(food_id, 0)
 
 
-async def get_count(tg_id, current_id) -> tuple:
+async def get_count(tg_id, current_id, is_user_id=False) -> tuple:
     """Функция для того, чтобы узнать какое количество конкретных позиций у пользователя в заказе,
     а так же стоимость и количество ВСЕХ товаров в корзине"""
-    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
+    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0] if not is_user_id else tg_id
+
+    if (user_id, ) not in orders.print_table('user_id'):
+        orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
+
     current_lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
     basket = await get_basket(user_id, current_lst)
     food_count = 0
@@ -149,3 +143,20 @@ async def clear_basket(user_id) -> str | int:
         return "Корзина была очищена!"
     return 0
 
+
+async def set_rating(food_id, user_id, cmd) -> str | int:
+    """Функция для установки лайков и дизлайков на блюдах"""
+    altcmd = "dislikes" if cmd == "like" else "likes"
+    lst, altlst = cafe.print_table(f'{cmd}s', altcmd, where=f'id = {food_id}')[0]
+    if str(user_id) in lst.split():
+        return f"Вы уже ставили {cmd} этому блюду!"
+
+    new_lst = lst + " " + str(user_id)
+    if str(user_id) in altlst.split():
+        altlst = altlst.split()
+        altlst.remove(str(user_id))
+        new_altlst = " ".join(altlst) if len(altlst) else ""
+        cafe.update(f'{altcmd} = "{new_altlst}"', where=f'id = {food_id}')
+
+    cafe.update(f'{cmd}s = "{new_lst}"', where=f'id = {food_id}')
+    return 0

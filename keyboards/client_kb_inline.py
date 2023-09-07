@@ -40,7 +40,7 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
                         )
     if not is_admin:
         ikb.row(InlineKeyboardButton("💵 Заказ", callback_data='cm_bs_order_'),
-                InlineKeyboardButton(f"🛒 {basket_count}, {total_price}р.", callback_data='cm_bs_open_'),
+                InlineKeyboardButton(f"{basket_count}🛒, {total_price}р", callback_data='cm_bs_open_'),
                 InlineKeyboardButton("🗑 Очистить", callback_data=f'cm_bs_clear_{type_food}')
                 )
     return ikb
@@ -48,24 +48,25 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
 
 async def kb_client_inline_menu_info(food_id, user_id):
     """Карточка товара, подробная информация о товаре"""
-    typ, dislike, like, basket, count = await get_food_kb_info(food_id, user_id)
+    typ, dislike, like = await get_food_kb_info(food_id)
+    basket_count, total_price, food_count = await get_count(user_id, food_id, is_user_id=True)
     ikb = InlineKeyboardMarkup()
-    b1 = InlineKeyboardButton(f"👎 {dislike}", callback_data=f"dislike")
-    b2 = InlineKeyboardButton("➖", callback_data=f"minus")
-    b3 = InlineKeyboardButton(f"🛒 {count}", callback_data=f"basket")
-    b4 = InlineKeyboardButton("➕", callback_data=f"plus")
-    b5 = InlineKeyboardButton(f"👍 {like}", callback_data=f"like")
+    b1 = InlineKeyboardButton(f"👎 {dislike}", callback_data=f"cmi_dislike_{food_id}")
+    b2 = InlineKeyboardButton("➖", callback_data=f"cmi_minus_{food_id}")
+    b3 = InlineKeyboardButton(f"{food_count}", callback_data=f"cm_show_")
+    b4 = InlineKeyboardButton("➕", callback_data=f"cmi_plus_{food_id}")
+    b5 = InlineKeyboardButton(f"👍 {like}", callback_data=f"cmi_like_{food_id}")
     ikb.row(b1, b2, b3, b4, b5)
-    if basket:
-        b6 = InlineKeyboardButton(f"➕🍟", callback_data="snack")
-        b7 = InlineKeyboardButton(f"$ {basket}р.", callback_data=f"buying_start")
-        b8 = InlineKeyboardButton(f"➕🥤 ", callback_data="drink")
+    if food_count:
+        b6 = InlineKeyboardButton(f"➕🍟", callback_data="cmi_open_snack")
+        b7 = InlineKeyboardButton(f"{basket_count}🛒, {total_price}р", callback_data=f"cm_bs_open_")
+        b8 = InlineKeyboardButton(f"➕🥤 ", callback_data="cmi_open_drink")
         if int(typ) not in (40, 50, 60):
-            ikb.add(b6, b7, b8)
+            ikb.add(b7).add(b6, b8)
         elif int(typ) == 40:
-            return ikb.add(b8, b7, btclose)
+            return ikb.add(b8, b7)
         else:
-            return ikb.add(b6, b7, btclose)
+            return ikb.add(b6, b7)
     ikb.add(btclose)
     return ikb
 

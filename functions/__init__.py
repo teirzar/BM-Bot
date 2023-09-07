@@ -9,4 +9,5 @@ from functions.client_functions import (get_tg_id,
                                         get_food_text,
                                         set_order,
                                         get_count,
-                                        clear_basket)
+                                        clear_basket,
+                                        set_rating)
