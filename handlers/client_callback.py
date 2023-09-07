@@ -1,9 +1,9 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
-from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating
+from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_text_basket
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
-from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_basket
+from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket
 
 
 async def cmd_close_inline_handler(callback: types.CallbackQuery):
@@ -41,9 +41,6 @@ async def client_inline_menu(callback: types.CallbackQuery):
             text_new_message, image = await get_food_text(food_id)
             kb, new_message = await kb_client_inline_menu_info(food_id, tg_id), True
 
-        case "show":
-            return await callback.answer("")
-
         case "food":
             food_id, cmd, type_food = data
             res = await set_order(user_id, food_id, cmd)
@@ -52,15 +49,6 @@ async def client_inline_menu(callback: types.CallbackQuery):
             kb = await kb_client_inline_menu(type_food, tg_id, current_id=int(food_id))
             text = f"ID_{user_id} выбрал <{cmd}> блюдо ID_{food_id}"
             cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
-
-        case "bs":
-            cmd, type_food = data
-            if cmd == "clear":
-                cb_text = await clear_basket(user_id)
-                if not cb_text:
-                    return await callback.answer("В Вашей корзине нет товаров!", show_alert=True)
-                text = f"ID_{user_id} очистил корзину"
-                kb = await kb_client_inline_menu(type_food, tg_id)
 
     await add_log(text)
     await callback.answer(cb_text)
@@ -103,9 +91,58 @@ async def client_inline_menu_info(callback: types.CallbackQuery):
     return await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if new_message \
         else await callback.message.edit_reply_markup(reply_markup=kb)
 
+
+async def client_inline_menu_button_support(callback: types.CallbackQuery):
+    """Функция-хэндлер общих вспомогательных кнопок на клавиатурах"""
+    user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+    cmd, *data = callback.data.split("_")[1:]
+    is_new_message = is_new_text = False
+    match cmd:
+
+        case "clear":
+            type_food = data[0]
+            cb_text = await clear_basket(user_id)
+            if not cb_text:
+                return await callback.answer("В Вашей корзине нет товаров!", show_alert=True)
+            text = f"ID_{user_id} очистил корзину"
+            if type_food:
+                kb = await kb_client_inline_menu(type_food, tg_id)
+            else:
+                text_new_message, is_new_text = await get_text_basket(tg_id, user_id), True
+                kb = await kb_client_inline_basket(user_id)
+
+        case "open":
+            text, cb_text, is_new_message = f"ID_{user_id} открыл корзину", "Открываю корзину", True
+            text_new_message = await get_text_basket(tg_id, user_id)
+            kb = await kb_client_inline_basket(user_id)
+
+        case "order":
+            text, cb_text = f"ID_{user_id} зашел в оформление заказа", "Оформление заказа"
+            # не сделано !
+
+        case "show":
+            return await callback.answer("")
+
+    await add_log(text)
+    await callback.answer(cb_text)
+    if is_new_message:
+        return await bot.send_message(tg_id, text=text_new_message, reply_markup=kb)
+    elif is_new_text:
+        return await callback.message.edit_text(text=text_new_message, reply_markup=kb)
+    return await callback.message.edit_reply_markup(reply_markup=kb)
+
+
+async def client_inline_basket(callback: types.CallbackQuery):
+    """Функция-хэндлер клавиатуры kb_client_inline_basket"""
+    user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+
+
 # ====================== LOADING ======================
 def register_inline_handlers_client(dp: Dispatcher):
     """Регистрация хэндлеров"""
     dp.register_callback_query_handler(cmd_close_inline_handler, Text(equals="close_inline_handler"))
     dp.register_callback_query_handler(client_inline_menu, Text(startswith="cm_"))
     dp.register_callback_query_handler(client_inline_menu_info, Text(startswith="cmi_"))
+    dp.register_callback_query_handler(client_inline_menu_button_support, Text(startswith="bs_"))
+    dp.register_callback_query_handler(client_inline_basket, Text(startswith="cb_"))
+

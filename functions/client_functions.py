@@ -117,7 +117,7 @@ async def set_order(user_id, food_id, cmd) -> str | int:
     return current_basket.get(food_id, 0)
 
 
-async def get_count(tg_id, current_id) -> tuple:
+async def get_count(tg_id, current_id=None) -> tuple:
     """Функция для того, чтобы узнать какое количество конкретных позиций у пользователя в заказе,
     а так же стоимость и количество ВСЕХ товаров в корзине"""
     user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
@@ -151,7 +151,7 @@ async def set_rating(food_id, user_id, cmd) -> str | int:
     if str(user_id) in lst.split():
         return f"Вы уже ставили {cmd} этому блюду!"
 
-    new_lst = lst + " " + str(user_id)
+    new_lst = (lst + " " + str(user_id)).strip()
     if str(user_id) in altlst.split():
         altlst = altlst.split()
         altlst.remove(str(user_id))
@@ -160,3 +160,13 @@ async def set_rating(food_id, user_id, cmd) -> str | int:
 
     cafe.update(f'{cmd}s = "{new_lst}"', where=f'id = {food_id}')
     return 0
+
+
+async def get_text_basket(tg_id, user_id) -> str:
+    """Функция для генерации и возврата строки с информацией о заполненности корзины пользователя"""
+    basket = await get_basket(user_id)
+    basket_count, total_price, food_count = await get_count(tg_id)
+    text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб:\n\n" \
+        if len(basket) else "Ваша корзина пуста."
+
+    return text
