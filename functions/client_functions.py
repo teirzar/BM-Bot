@@ -117,10 +117,10 @@ async def set_order(user_id, food_id, cmd) -> str | int:
     return current_basket.get(food_id, 0)
 
 
-async def get_count(tg_id, current_id, is_user_id=False) -> tuple:
+async def get_count(tg_id, current_id) -> tuple:
     """Функция для того, чтобы узнать какое количество конкретных позиций у пользователя в заказе,
     а так же стоимость и количество ВСЕХ товаров в корзине"""
-    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0] if not is_user_id else tg_id
+    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
 
     if (user_id, ) not in orders.print_table('user_id'):
         orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')

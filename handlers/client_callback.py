@@ -39,7 +39,7 @@ async def client_inline_menu(callback: types.CallbackQuery):
             food_id = data[0]
             text, cb_text = f"ID_{user_id} открыл инфо о блюде ID_{food_id}", "Открываю информацию о товаре"
             text_new_message, image = await get_food_text(food_id)
-            kb, new_message = await kb_client_inline_menu_info(food_id, user_id), True
+            kb, new_message = await kb_client_inline_menu_info(food_id, tg_id), True
 
         case "show":
             return await callback.answer("")
@@ -81,23 +81,26 @@ async def client_inline_menu_info(callback: types.CallbackQuery):
             if res:
                 return await callback.answer(res, show_alert=True)
             cb_text, text = f"Вы поставили {cmd}!", f"ID_{user_id} поставил <{cmd}> блюду ID_{food_id}"
-            kb = await kb_client_inline_menu_info(food_id, user_id)
+            kb = await kb_client_inline_menu_info(food_id, tg_id)
 
         case 'plus' | 'minus':
             food_id = data[0]
             res = await set_order(user_id, food_id, cmd)
             if type(res) is str:
                 return await callback.answer(res, show_alert=True)
-            kb = await kb_client_inline_menu_info(food_id, user_id)
+            kb = await kb_client_inline_menu_info(food_id, tg_id)
             text = f"ID_{user_id} выбрал <{cmd}> блюдо ID_{food_id}"
             cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
 
         case 'open':
-            ...
+            typ = data[0]
+            kb = await kb_client_inline_menu(40 if typ == "snack" else 60, tg_id)
+            text, cb_text, new_message = f"ID_{user_id} открыл доп. меню <{typ}>", "Открываю новое меню", True
+            text_new_message = "Выберите товар:"
 
     await add_log(text)
     await callback.answer(cb_text)
-    return await bot.send_message(tg_id, text=text_new_message, parse_mode='html') if new_message \
+    return await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if new_message \
         else await callback.message.edit_reply_markup(reply_markup=kb)
 
 # ====================== LOADING ======================
