@@ -2,7 +2,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from functions import get_admins, get_food_kb_info, get_count, get_basket
 from config import cafe
 
-
 # Кнопка закрыть клавиатуру
 btclose = InlineKeyboardButton("[X] Закрыть", callback_data=f"close_inline_handler")
 
@@ -15,7 +14,7 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
     """Список позиций заведения по выбранной категории товаров"""
     ikb = InlineKeyboardMarkup(row_width=3)
     lst = cafe.print_table('id', 'name', 'weight', 'price', 'status', where=f'type = {type_food}')
-    pt = "гр" if type_food != 50 else "мл"
+    pt = "гр" if type_food not in (50, 60) else "мл"
     is_admin = tg_id in await get_admins()
     basket_count, total_price, food_count = await get_count(tg_id, current_id)
     for i, n, w, p, s in lst:
@@ -43,6 +42,7 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
                 InlineKeyboardButton(f"{basket_count}🛒, {total_price}р", callback_data='bs_open_'),
                 InlineKeyboardButton("🗑 Очистить", callback_data=f'bs_clear_{type_food}')
                 )
+    ikb.add(btclose)
     return ikb
 
 
@@ -72,7 +72,6 @@ async def kb_client_inline_menu_info(food_id, tg_id):
     ikb.add(btclose)
     return ikb
 
-
 # =======================================
 #              END CAFE MENU
 # =======================================
@@ -81,7 +80,6 @@ async def kb_client_inline_menu_info(food_id, tg_id):
 # =======================================
 #                 BASKET
 # =======================================
-
 
 async def kb_client_inline_basket(user_id):
     """Клавиатура корзины"""
