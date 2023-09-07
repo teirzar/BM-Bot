@@ -133,10 +133,11 @@ async def get_count(tg_id, current_id) -> tuple:
     user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
     current_lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
     basket = await get_basket(user_id, current_lst)
-    basket_count, food_count = len(basket), 0
+    food_count = 0
     if current_id and str(current_id) in basket:
         food_count = basket[str(current_id)]
     total_price = sum([cafe.print_table('price', where=f'id = {k}')[0][0] * int(v) for k, v in basket.items()])
+    basket_count = sum(basket.values())
     return basket_count, total_price, food_count
 
 
