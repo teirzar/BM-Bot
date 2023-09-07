@@ -135,6 +135,29 @@ async def client_inline_menu_button_support(callback: types.CallbackQuery):
 async def client_inline_basket(callback: types.CallbackQuery):
     """Функция-хэндлер клавиатуры kb_client_inline_basket"""
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+    cmd, *data = callback.data.split("_")[1:]
+    is_new_message = False
+    match cmd:
+
+        case "info":
+            food_id = data[0]
+            text, cb_text = f"ID_{user_id} открыл инфо о блюде ID_{food_id}", "Открываю информацию о товаре"
+            text_new_message, image = await get_food_text(food_id)
+            kb, is_new_message = await kb_client_inline_menu_info(food_id, tg_id), True
+
+        case "food":
+            food_id, cmd = data
+            res = await set_order(user_id, food_id, cmd)
+            if type(res) is str:
+                return await callback.answer(res, show_alert=True)
+            text_new_message, kb = await get_text_basket(tg_id, user_id), await kb_client_inline_basket(user_id)
+            text = f"ID_{user_id} выбрал <{cmd}> блюдо ID_{food_id}"
+            cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
+
+    await add_log(text)
+    await callback.answer(cb_text)
+    return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') if \
+        is_new_message else await callback.message.edit_text(text=text_new_message, reply_markup=kb)
 
 
 # ====================== LOADING ======================
