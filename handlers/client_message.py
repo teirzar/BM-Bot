@@ -15,7 +15,7 @@ async def cmd_client_start_menu(message: types.Message):
     tg_id = await get_tg_id(message)
     if (tg_id, ) not in users.print_table('tg_id'):
         username, name = message["from"].username, message["from"].first_name
-        text = f" Новый пользователь {name}! TG: {username} ID_{tg_id}"
+        text = f" Новый пользователь! TG: {username}; ID_{tg_id}"
         users.write('tg_id', 'username', 'name', values=f'{tg_id}, "{username}", "{name}"')
         await add_log(text)
         [await bot.send_message(admin, text) for admin in await get_admins()]
