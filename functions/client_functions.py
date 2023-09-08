@@ -98,6 +98,8 @@ async def get_basket(user_id, lst=None):
 
 async def set_order(user_id, food_id, cmd) -> str | int:
     """Функция для изменения состояния заказа в корзине, выбор действия с товаром и реализация действия"""
+    await check_order(user_id, is_user_id=True)
+
     order_id, current_lst = orders.print_table('id', 'body', where=f'user_id = {user_id} and status = 0')[0]
     current_basket = await get_basket(user_id, current_lst) if current_lst else {}
 
@@ -168,6 +170,15 @@ async def set_rating(food_id, user_id, cmd) -> str | int:
     return 0
 
 
+async def get_order_list_text(basket):
+    """Функция для вывода текста ТОЛЬКО состава заказа, количество позиций и их цена"""
+    names = {i: k for i, *k in cafe.print_table('id', 'name', 'price')}
+    text = ""
+    for i, count in basket.items():
+        text += f"{names[int(i)][0]} - {count} шт. ({names[int(i)][1] * count} руб.)\n"
+    return text
+
+
 async def get_text_basket(tg_id, user_id, full=False) -> str:
     """Функция для генерации и возврата строки с информацией о заполненности корзины пользователя"""
     basket = await get_basket(user_id)
@@ -176,10 +187,8 @@ async def get_text_basket(tg_id, user_id, full=False) -> str:
     text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб." \
         if len(basket) else "Ваша корзина пуста."
     text += f" (с учетом скидки цена: {total_price - discount} руб.)\n\n" if discount else "\n\n"
-    names = {i: k for i, *k in cafe.print_table('id', 'name', 'price')}
     if full:
-        for i, count in basket.items():
-            text += f"{names[int(i)][0]} - {count} шт. ({names[int(i)][1] * count} руб.)\n"
+            text += await get_order_list_text(basket)
     return text
 
 
@@ -234,3 +243,17 @@ async def update_user_bonus(user_id) -> tuple | str:
 
     return new_price, user_bonus, current_discount
 
+
+async def make_purchase(user_id, tg_id) -> str | tuple:
+    """Функция, активируемая при нажатии на подтверждение заказа, покупка товара"""
+    await check_order(user_id, is_user_id=True)
+    lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
+    if not lst:
+        return "В Вашей корзине нет товаров!"
+    order_id = orders.print_table('id', where=f'user_id = {user_id} and status = 0')[0][0]
+    basket_count, total_price, food_count = await get_count(tg_id)
+    discount = await get_current_discount(user_id)
+    date = await get_time()
+    orders.update(f'status = 1, price = {total_price - discount}, date_order = "{date}"',
+                  where=f'user_id = {user_id} and status = 0')
+    return total_price - discount, discount, lst, order_id

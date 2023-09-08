@@ -13,6 +13,9 @@ from functions import (add_log,
                        is_bonus_activated,
                        update_user_bonus,
                        get_current_discount,
+                       make_purchase,
+                       get_admins,
+                       get_order_text
                        )
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
@@ -143,8 +146,8 @@ async def client_inline_basket_menu(callback: types.CallbackQuery):
     await add_log(text)
 
     try:
-        await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if is_new_message else \
-            await callback.message.edit_reply_markup(reply_markup=kb)
+        return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
+            if is_new_message else await callback.message.edit_text(text=text_new_message, reply_markup=kb)
     except MessageNotModified:
         pass
 
@@ -187,7 +190,18 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
             kb = await kb_client_inline_order_menu(user_id, user_bonus, current_discount)
 
         case "buy":
-            text, cb_text = f"ID_{user_id} оформляет заказ", "Отправляю заказ в заведение"
+            res = await make_purchase(user_id, tg_id)
+            if type(res) == str:
+                return await callback.answer(res, show_alert=True)
+            order_id = res[-1]
+            for admin in await get_admins():
+                await bot.send_message(admin, await get_order_text(user_id, res))
+            new_text_message = "Заказ успешно создан и отправлен в заведение! Вам будет начислен кэшбек после того, " \
+                               "как Вы заберете заказ в заведении. Когда заказ будет принят, Вам придет уведомление! " \
+                               "Если у Вас возникнут вопросы по заказу, позвоните нам, либо заполните форму обратной " \
+                               "связи в настройках в нашем боте.\n\nСпасибо, что выбрали нас!"
+            text, cb_text = f"ID_{user_id} оформил заказ ID_{order_id}", "Отправляю заказ в заведение"
+            kb = None
 
     await add_log(text)
     await callback.answer(cb_text)

@@ -17,5 +17,8 @@ from functions.client_functions import (get_tg_id,
                                         get_user_status,
                                         is_bonus_activated,
                                         update_user_bonus,
-                                        get_current_discount
+                                        get_current_discount,
+                                        make_purchase,
+                                        get_order_list_text
                                         )
+from functions.admin_functions import get_order_text
