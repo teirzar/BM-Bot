@@ -46,7 +46,7 @@ async def cmd_client_static_menu(message: types.Message):
         case "☎ Позвонить" | "/call":
             log_text, text = "номер телефона заведения", "Наш номер телефона: +12345678901"
         case "🧾 Мои заказы" | "/orders":
-            log_text, text = "архив заказов", await get_prev_orders(user_id)
+            log_text, text = "архив заказов", await get_prev_orders(user_id, tg_id)
 
     await add_log(f"ID_{user_id} просматривает {log_text}")
     return await bot.send_message(tg_id, text, parse_mode='html')

@@ -49,10 +49,19 @@ async def get_profile_text(user_id) -> str:
 
 
 # get prev orders text
-async def get_prev_orders(user_id) -> str:
+async def get_prev_orders(user_id, tg_id) -> str:
     """Возвращает текст о последних заказах пользователя, если его нет, возвращает текст о том, что список пуст.
     Необходимо для функции 'Мои заказы' """
-    return "Ваши заказы: В РАЗРАБОТКЕ"
+    user_orders, total_price = users.print_table('orders', 'total_price', where=f'id = {user_id}')[0]
+    if not user_orders:
+        return "У вас нет ни одного заказа."
+    text = f"У вас {len(user_orders.split())} заказов на общую сумму {total_price} руб.\n"
+    current_order = orders.print_table('body', where=f'user_id = {user_id} and status = 0')
+    if current_order and current_order[0][0]:
+        text += f'\nНа данный момент товары ' \
+                f'{await get_text_basket(tg_id, user_id, full=True)}'
+    text += f"\nНажмите на интересующий Вас заказ, чтобы получить информацию о нем."
+    return text
 
 
 async def get_type_food_id(text) -> int:
@@ -73,7 +82,7 @@ async def check_order(income_id, is_user_id=False):
 
 
 async def get_food_kb_info(food_id) -> tuple:
-    """"Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
+    """Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
     Содержит информацию о лайках, дизлайках на блюде, тип блюда"""
     typ, dislike, like = cafe.print_table('type', 'dislikes', 'likes', where=f'id = {food_id}')[0]
     dislike, like = len(dislike.split()), len(like.split())
@@ -189,7 +198,7 @@ async def get_text_basket(tg_id, user_id, full=False) -> str:
     basket = await get_basket(user_id)
     basket_count, total_price, food_count = await get_count(tg_id)
     discount = await get_current_discount(user_id)
-    text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб." \
+    text = f"в Вашей корзине:\n{basket_count} товара(-ов) на сумму {total_price} руб." \
         if len(basket) else "Ваша корзина пуста."
     text += f" (с учетом скидки цена: {total_price - discount} руб.)\n\n" if discount else "\n\n"
     if full:
