@@ -7,4 +7,6 @@ from keyboards.client_kb_inline import (kb_client_inline_menu,
                                         kb_client_inline_menu_info,
                                         kb_client_inline_basket_menu,
                                         kb_client_inline_order_menu,
+                                        kb_client_inline_prev_orders_menu,
+                                        kb_client_inline_order_cancel_button
                                         )

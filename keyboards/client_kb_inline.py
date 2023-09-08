@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from functions import get_admins, get_food_kb_info, get_count, get_basket
-from config import cafe
+from functions import get_admins, get_food_kb_info, get_count, get_basket, get_orders
+from config import cafe, orders, types_base
 
 # Кнопка закрыть клавиатуру
 btclose = InlineKeyboardButton("[X] Закрыть", callback_data=f"close_inline_handler")
@@ -123,6 +123,28 @@ async def kb_client_inline_order_menu(user_id, bonus, current_discount):
     b3 = InlineKeyboardButton("Все верно", callback_data=f"om_buy")
     ikb.add(b2, b3).add(btclose)
     return ikb
+
+
+async def kb_client_inline_prev_orders_menu(user_id):
+    """Клавиатура для меню архива заказов"""
+    order_list = str(await get_orders(user_id))
+    types = ["🛒", "🔄", "🕓", "🍴", "✅", "❌"]
+    ikb = InlineKeyboardMarkup()
+    if order_list:
+        lst = {k: v for k, *v in orders.print_table('id', 'date_start', 'date_order', 'price', 'status',
+                                                    where=f'user_id = {user_id}')}
+        for order_id in order_list.split():
+            order_id = int(order_id)
+            date_1, date_2, price, status = lst[order_id][0], lst[order_id][1], lst[order_id][2], lst[order_id][-1]
+            ikb.add(InlineKeyboardButton(f"№{order_id}: {date_2 if date_2 else date_1}, {price} руб. {types[status]}",
+                                         callback_data=f"order_{order_id}"))
+    return ikb.add(btclose)
+
+
+async def kb_client_inline_order_cancel_button(order_id):
+    """Кнопка отмены заказа"""
+    ikb = InlineKeyboardMarkup()
+    return ikb.add(InlineKeyboardButton("Отменить заказ ❌", callback_data=f"order_cancel_{order_id}"))
 
 # =======================================
 #               END ORDER

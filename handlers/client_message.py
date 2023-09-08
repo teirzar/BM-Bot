@@ -3,7 +3,7 @@ from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
 from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
 from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
-from keyboards import kb_client_inline_menu
+from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 
 
 # =======================================
@@ -34,6 +34,7 @@ async def cmd_client_start_menu(message: types.Message):
 async def cmd_client_static_menu(message: types.Message):
     """Функция для элементов не требующих вызов подменю"""
     user_id, tg_id = await get_user_id(message), await get_tg_id(message)
+    new_kb = False
 
     match message.text:
         case "❓ Помощь" | "/help":
@@ -47,9 +48,11 @@ async def cmd_client_static_menu(message: types.Message):
             log_text, text = "номер телефона заведения", "Наш номер телефона: +12345678901"
         case "🧾 Мои заказы" | "/orders":
             log_text, text = "архив заказов", await get_prev_orders(user_id, tg_id)
+            new_kb, kb = True, await kb_client_inline_prev_orders_menu(user_id)
 
     await add_log(f"ID_{user_id} просматривает {log_text}")
-    return await bot.send_message(tg_id, text, parse_mode='html')
+    return await bot.send_message(tg_id, text, parse_mode='html') if not new_kb else \
+        await bot.send_message(tg_id, text, parse_mode='html', reply_markup=kb)
 
 
 async def cmd_client_static_submenu(message: types.Message):

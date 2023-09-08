@@ -71,7 +71,15 @@ async def get_type_food_id(text) -> int:
     return food_type[0][0]
 
 
+async def get_orders(user_id) -> str:
+    """Возвращает строку с ID заказов пользователя"""
+    user_orders = users.print_table('orders', where=f'id = {user_id}')
+    return user_orders[0][0] if user_orders and user_orders[0][0] else ""
+
+
 async def check_order(income_id, is_user_id=False):
+    """Функция проверяет, есть ли заказ в базе, и если его нет, то создает заказ со статусом "В корзине",
+    также попутно внося его в список заказов в базе данных пользователей"""
     user_id = income_id if is_user_id else users.print_table('id', where=f'tg_id = {income_id}')[0][0]
     if (user_id, ) not in orders.print_table('user_id', where=f'status = 0'):
         orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
@@ -202,7 +210,7 @@ async def get_text_basket(tg_id, user_id, full=False) -> str:
         if len(basket) else "Ваша корзина пуста."
     text += f" (с учетом скидки цена: {total_price - discount} руб.)\n\n" if discount else "\n\n"
     if full:
-            text += await get_order_list_text(basket)
+        text += await get_order_list_text(basket)
     return text
 
 
