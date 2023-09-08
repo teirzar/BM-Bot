@@ -10,13 +10,16 @@ from functions import (add_log,
                        get_text_basket,
                        get_user_bonus,
                        get_user_status,
+                       is_bonus_activated,
+                       update_user_bonus,
+                       get_current_discount,
                        )
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
 from keyboards import (kb_client_inline_menu,
                        kb_client_inline_menu_info,
                        kb_client_inline_basket_menu,
-                       kb_client_order_menu,
+                       kb_client_inline_order_menu,
                        )
 
 
@@ -28,7 +31,7 @@ async def client_inline_menu(callback: types.CallbackQuery):
     """Функция-хэндлер клавиатуры kb_client_inline_menu"""
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
     cmd, *data = callback.data.split("_")[1:]
-    new_message = False
+    is_new_message = False
     match cmd:
 
         case "current":
@@ -44,7 +47,7 @@ async def client_inline_menu(callback: types.CallbackQuery):
             food_id = data[0]
             text, cb_text = f"ID_{user_id} открыл инфо о блюде ID_{food_id}", "Открываю информацию о товаре"
             text_new_message, image = await get_food_text(food_id)
-            kb, new_message = await kb_client_inline_menu_info(food_id, tg_id), True
+            kb, is_new_message = await kb_client_inline_menu_info(food_id, tg_id), True
 
         case "food":
             food_id, cmd, type_food = data
@@ -56,16 +59,21 @@ async def client_inline_menu(callback: types.CallbackQuery):
             cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
 
     await add_log(text)
-    await callback.answer(cb_text)
-    return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') if \
-        new_message else await callback.message.edit_reply_markup(reply_markup=kb)
+
+    try:
+        await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if is_new_message else \
+            await callback.message.edit_reply_markup(reply_markup=kb)
+    except MessageNotModified:
+        pass
+
+    return await callback.answer(cb_text)
 
 
 async def client_inline_menu_info(callback: types.CallbackQuery):
     """Функция-хэндлер клавиатуры kb_client_inline_menu"""
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
     cmd, *data = callback.data.split("_")[1:]
-    new_message, text_new_message = False, "text"
+    is_new_message, text_new_message = False, "text"
     match cmd:
 
         case 'like' | 'dislike':
@@ -88,13 +96,18 @@ async def client_inline_menu_info(callback: types.CallbackQuery):
         case 'open':
             typ = data[0]
             kb = await kb_client_inline_menu(40 if typ == "snack" else 60, tg_id)
-            text, cb_text, new_message = f"ID_{user_id} открыл доп. меню <{typ}>", "Открываю новое меню", True
+            text, cb_text, is_new_message = f"ID_{user_id} открыл доп. меню <{typ}>", "Открываю новое меню", True
             text_new_message = "Выберите товар:"
 
     await add_log(text)
-    await callback.answer(cb_text)
-    return await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if new_message \
-        else await callback.message.edit_reply_markup(reply_markup=kb)
+
+    try:
+        await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if is_new_message else \
+            await callback.message.edit_reply_markup(reply_markup=kb)
+    except MessageNotModified:
+        pass
+
+    return await callback.answer(cb_text)
 
 # =======================================
 #              END CAFE MENU
@@ -105,7 +118,7 @@ async def client_inline_menu_info(callback: types.CallbackQuery):
 #                 BASKET
 # =======================================
 
-async def client_inline_basket(callback: types.CallbackQuery):
+async def client_inline_basket_menu(callback: types.CallbackQuery):
     """Функция-хэндлер клавиатуры kb_client_inline_basket"""
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
     cmd, *data = callback.data.split("_")[1:]
@@ -128,12 +141,60 @@ async def client_inline_basket(callback: types.CallbackQuery):
             cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
 
     await add_log(text)
-    await callback.answer(cb_text)
-    return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') if \
-        is_new_message else await callback.message.edit_text(text=text_new_message, reply_markup=kb)
+
+    try:
+        await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if is_new_message else \
+            await callback.message.edit_reply_markup(reply_markup=kb)
+    except MessageNotModified:
+        pass
+
+    return await callback.answer(cb_text)
 
 # =======================================
 #               END BASKET
+# =======================================
+
+
+# =======================================
+#                 ORDER
+# =======================================
+
+async def client_inline_order_menu(callback: types.CallbackQuery):
+    """Хэндлер клавиатуры kb_client_inline_order_menu"""
+    user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+    cmd = callback.data.split("_")[1]
+    match cmd:
+
+        case "bonus":
+            bonus, order_check = await get_user_bonus(user_id), await is_bonus_activated(user_id)
+            if not bonus or order_check:
+                txt_err = order_check if type(order_check) == str else "У вас нет бонусов или они были использованы!"
+                return await callback.answer(txt_err, show_alert=True)
+
+            res = await update_user_bonus(user_id)
+
+            if type(res) == str:
+                await callback.message.edit_text(res)
+                return await callback.answer(res, show_alert=True)
+
+            text, cb_text = f"ID_{user_id} списал бонусы", "Бонусы списаны!"
+            new_price, user_bonus, current_discount = res
+            new_text_message = await get_text_basket(tg_id, user_id, full=True)
+            new_text_message += f"\nБонусный баланс: {user_bonus}\n" \
+                                f"Скидка составила: {current_discount}\n" \
+                                f"Новая цена: {new_price}"
+
+            kb = await kb_client_inline_order_menu(user_id, user_bonus, current_discount)
+
+        case "buy":
+            text, cb_text = f"ID_{user_id} оформляет заказ", "Отправляю заказ в заведение"
+
+    await add_log(text)
+    await callback.answer(cb_text)
+    return await callback.message.edit_text(text=new_text_message, reply_markup=kb)
+
+# =======================================
+#               END ORDER
 # =======================================
 
 
@@ -187,7 +248,8 @@ async def client_inline_menu_button_support(callback: types.CallbackQuery):
             discount, status = res
             text_new_message += f"\nБонусный баланс: {bonus} бонусов\n" \
                                 f"Уровень кэшбека при вашем статусе <{status}> составляет: {discount}%"
-            kb, is_new_message = await kb_client_order_menu(bonus), True
+            current_discount = await get_current_discount(user_id)
+            kb, is_new_message = await kb_client_inline_order_menu(user_id, bonus, current_discount), True
 
         case "show":
             return await callback.answer("")
@@ -212,5 +274,5 @@ def register_inline_handlers_client(dp: Dispatcher):
     dp.register_callback_query_handler(client_inline_menu, Text(startswith="cm_"))
     dp.register_callback_query_handler(client_inline_menu_info, Text(startswith="cmi_"))
     dp.register_callback_query_handler(client_inline_menu_button_support, Text(startswith="bs_"))
-    dp.register_callback_query_handler(client_inline_basket, Text(startswith="cb_"))
-
+    dp.register_callback_query_handler(client_inline_basket_menu, Text(startswith="cb_"))
+    dp.register_callback_query_handler(client_inline_order_menu, Text(startswith="om_"))

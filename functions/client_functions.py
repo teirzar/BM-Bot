@@ -62,6 +62,12 @@ async def get_type_food_id(text) -> int:
     return food_type[0][0]
 
 
+async def check_order(income_id, is_user_id=False):
+    user_id = income_id if is_user_id else users.print_table('id', where=f'tg_id = {income_id}')[0][0]
+    if (user_id, ) not in orders.print_table('user_id', where=f'status = 0'):
+        orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
+
+
 async def get_food_kb_info(food_id) -> tuple:
     """"Возвращает кортеж данных, необходимых для функционирования клавиатуры карточки товара.
     Содержит информацию о лайках, дизлайках на блюде, тип блюда"""
@@ -83,9 +89,10 @@ async def get_food_text(food_id) -> tuple:
 
 async def get_basket(user_id, lst=None):
     """Возвращает корзину пользователя в виде словаря, где ключ - id блюда, а значение - количество товарных позиций"""
+    await check_order(user_id, is_user_id=True)
     if not lst:
         lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
-    basket = {el.split(":")[0]:int(el.split(":")[1]) for el in lst.split()}
+    basket = {el.split(":")[0]: int(el.split(":")[1]) for el in lst.split()}
     return basket
 
 
@@ -122,8 +129,7 @@ async def get_count(tg_id, current_id=None) -> tuple:
     а так же стоимость и количество ВСЕХ товаров в корзине"""
     user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
 
-    if (user_id, ) not in orders.print_table('user_id'):
-        orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
+    await check_order(tg_id)
 
     current_lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
     basket = await get_basket(user_id, current_lst)
@@ -166,8 +172,10 @@ async def get_text_basket(tg_id, user_id, full=False) -> str:
     """Функция для генерации и возврата строки с информацией о заполненности корзины пользователя"""
     basket = await get_basket(user_id)
     basket_count, total_price, food_count = await get_count(tg_id)
-    text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб:\n\n" \
+    discount = await get_current_discount(user_id)
+    text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб." \
         if len(basket) else "Ваша корзина пуста."
+    text += f" (с учетом скидки цена: {total_price - discount} руб.)\n\n" if discount else "\n\n"
     names = {i: k for i, *k in cafe.print_table('id', 'name', 'price')}
     if full:
         for i, count in basket.items():
@@ -187,3 +195,42 @@ async def get_user_status(user_id) -> tuple | str:
         return "Админ не может совершать заказ!"
     discount, status_name = bonus.print_table("discount", "name")[0]
     return discount, status_name
+
+
+async def get_current_discount(user_id) -> int:
+    """Возвращает текущую скидку на заказе"""
+    return orders.print_table('bonus', where=f'user_id = {user_id} and status = 0')[0][0]
+
+
+async def set_order_price(tg_id, user_id) -> int:
+    """Функция, необходимая для записи стоимости заказа в базу данных"""
+    basket_count, total_price, food_count = await get_count(tg_id)
+    orders.update(f'price = {total_price}', where=f'user_id = {user_id} and status = 0')
+    return total_price
+
+
+async def is_bonus_activated(user_id) -> bool | str:
+    """Функция проверяет, активирован ли бонус на текущем заказе"""
+    await check_order(user_id, is_user_id=True)
+    try:
+        return orders.print_table('bonus', where=f'user_id = {user_id} and status = 0')[0][0]
+    except IndexError:
+        return "Ваша корзина пуста!"
+
+
+async def update_user_bonus(user_id) -> tuple | str:
+    """Функция списывает бонусы пользователя, применяет скидку к заказу"""
+    if not await get_basket(user_id):
+        return "В корзине нет товаров!"
+    tg_id, current_discount = users.print_table('tg_id', 'bonus', where=f'id = {user_id}')[0]
+    order_price = await set_order_price(tg_id, user_id)
+    check_price = order_price >= current_discount
+    user_bonus = 0 if check_price else current_discount - order_price
+    new_price = order_price - current_discount if check_price else 0
+    current_discount = current_discount if check_price else order_price
+
+    users.update(f'bonus = {user_bonus}', where=f'id = {user_id}')
+    orders.update(f'price = {new_price}, bonus = {current_discount}', where=f'user_id = {user_id} and status = 0')
+
+    return new_price, user_bonus, current_discount
+

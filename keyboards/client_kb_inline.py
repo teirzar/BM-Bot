@@ -110,10 +110,13 @@ async def kb_client_inline_basket_menu(user_id):
 #                 ORDER
 # =======================================
 
-async def kb_client_order_menu(bonus):
+async def kb_client_inline_order_menu(user_id, bonus, current_discount):
     """Клавиатура подтверждения и оформления заказа"""
     ikb = InlineKeyboardMarkup()
-    if bonus:
+    basket = await get_basket(user_id)
+    if not basket:
+        return ikb.add(btclose)
+    if bonus > 0 and not current_discount:
         b1 = InlineKeyboardButton("Списать бонусы", callback_data=f"om_bonus")
         ikb.add(b1)
     b2 = InlineKeyboardButton("Комментарий", callback_data=f"om_comment")
