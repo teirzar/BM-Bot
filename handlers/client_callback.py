@@ -1,29 +1,12 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
-from functions import (add_log,
-                       get_tg_id,
-                       get_user_id,
-                       get_food_text,
-                       set_order,
-                       clear_basket,
-                       set_rating,
-                       get_text_basket,
-                       get_user_bonus,
-                       get_user_status,
-                       is_bonus_activated,
-                       update_user_bonus,
-                       get_current_discount,
-                       make_purchase,
-                       get_admins,
-                       get_order_text
-                       )
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
-from keyboards import (kb_client_inline_menu,
-                       kb_client_inline_menu_info,
-                       kb_client_inline_basket_menu,
-                       kb_client_inline_order_menu,
-                       )
+from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_admins
+from functions import get_user_bonus, get_user_status, is_bonus_activated, update_user_bonus, get_current_discount
+from functions import make_purchase, get_text_basket, get_order_text
+from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
+from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
 
 
 # =======================================

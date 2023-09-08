@@ -60,7 +60,7 @@ async def get_prev_orders(user_id, tg_id) -> str:
     if current_order and current_order[0][0]:
         text += f'\nНа данный момент товары ' \
                 f'{await get_text_basket(tg_id, user_id, full=True)}'
-    text += f"\nНажмите на интересующий Вас заказ, чтобы получить информацию о нем."
+    text += f"\nНажмите на интересующий Вас заказ, чтобы получить информацию о нем.\n\nПоследние 20 заказов:"
     return text
 
 
