@@ -66,6 +66,10 @@ async def check_order(income_id, is_user_id=False):
     user_id = income_id if is_user_id else users.print_table('id', where=f'tg_id = {income_id}')[0][0]
     if (user_id, ) not in orders.print_table('user_id', where=f'status = 0'):
         orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
+        order_id = orders.print_table('id', where=f'status = 0 and user_id = {user_id}')[0][0]
+        current_orders = users.print_table('orders', where=f'id = {user_id}')[0][0]
+        current_orders = f'{current_orders} {order_id}' if current_orders else order_id
+        users.update(f'orders = "{current_orders}"', where=f'id = {user_id}')
 
 
 async def get_food_kb_info(food_id) -> tuple:
@@ -108,7 +112,7 @@ async def set_order(user_id, food_id, cmd) -> str | int:
             if food_id not in current_basket:
                 if len(current_basket) > 11:
                     return "Нельзя одновременно добавить более 12 различных товаров!"
-                new_food = current_lst + f" {food_id}:1"
+                new_food = f"{current_lst} {food_id}:1"
                 orders.update(f'body = "{new_food}"', where=f'id = {order_id}')
                 return 1
             if current_basket[food_id] + 1 > 15:
@@ -122,7 +126,8 @@ async def set_order(user_id, food_id, cmd) -> str | int:
             else:
                 current_basket[food_id] -= 1
 
-    orders.update(f'body = "{" ".join([f"{f}:{c}" for f, c in current_basket.items()])}"', where=f'id = {order_id}')
+    orders.update(f'body = "{" ".join([f"{f}:{c}" for f, c in current_basket.items()]).strip()}"',
+                  where=f'id = {order_id}')
     return current_basket.get(food_id, 0)
 
 
