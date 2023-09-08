@@ -81,7 +81,7 @@ async def kb_client_inline_menu_info(food_id, tg_id):
 #                 BASKET
 # =======================================
 
-async def kb_client_inline_basket(user_id):
+async def kb_client_inline_basket_menu(user_id):
     """Клавиатура корзины"""
     ikb = InlineKeyboardMarkup()
     basket = await get_basket(user_id)
@@ -103,4 +103,24 @@ async def kb_client_inline_basket(user_id):
 
 # =======================================
 #               END BASKET
+# =======================================
+
+
+# =======================================
+#                 ORDER
+# =======================================
+
+async def kb_client_order_menu(bonus):
+    """Клавиатура подтверждения и оформления заказа"""
+    ikb = InlineKeyboardMarkup()
+    if bonus > 0:
+        b1 = InlineKeyboardButton("Списать бонусы", callback_data=f"om_bonus")
+        ikb.add(b1)
+    b2 = InlineKeyboardButton("Добавить комментарий", callback_data=f"om_comment")
+    b3 = InlineKeyboardButton("Все верно, заказать", callback_data=f"om_buy")
+    ikb.add(b2, b3)
+    return ikb
+
+# =======================================
+#               END ORDER
 # =======================================

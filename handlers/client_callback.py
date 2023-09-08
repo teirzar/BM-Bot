@@ -1,9 +1,21 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
-from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_text_basket
+from functions import (add_log,
+                       get_tg_id,
+                       get_user_id,
+                       get_food_text,
+                       set_order,
+                       clear_basket,
+                       set_rating,
+                       get_text_basket,
+                       )
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
-from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket
+from keyboards import (kb_client_inline_menu,
+                       kb_client_inline_menu_info,
+                       kb_client_inline_basket_menu,
+                       kb_client_order_menu,
+                       )
 
 
 # =======================================
@@ -109,7 +121,7 @@ async def client_inline_basket(callback: types.CallbackQuery):
             res = await set_order(user_id, food_id, cmd)
             if type(res) is str:
                 return await callback.answer(res, show_alert=True)
-            text_new_message, kb = await get_text_basket(tg_id, user_id), await kb_client_inline_basket(user_id)
+            text_new_message, kb = await get_text_basket(tg_id, user_id), await kb_client_inline_basket_menu(user_id)
             text = f"ID_{user_id} выбрал <{cmd}> блюдо ID_{food_id}"
             cb_text = "Добавлено!" if cmd == "plus" else "Удалено!"
 
@@ -157,12 +169,12 @@ async def client_inline_menu_button_support(callback: types.CallbackQuery):
                 kb = await kb_client_inline_menu(type_food, tg_id)
             else:
                 text_new_message, is_new_text = await get_text_basket(tg_id, user_id), True
-                kb = await kb_client_inline_basket(user_id)
+                kb = await kb_client_inline_basket_menu(user_id)
 
         case "open":
             text, cb_text, is_new_message = f"ID_{user_id} открыл корзину", "Открываю корзину", True
             text_new_message = await get_text_basket(tg_id, user_id)
-            kb = await kb_client_inline_basket(user_id)
+            kb = await kb_client_inline_basket_menu(user_id)
 
         case "order":
             text, cb_text = f"ID_{user_id} зашел в оформление заказа", "Оформление заказа"
