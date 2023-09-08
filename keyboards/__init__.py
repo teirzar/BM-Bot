@@ -6,5 +6,5 @@ from keyboards.client_kb import (kb_client_main_menu,
 from keyboards.client_kb_inline import (kb_client_inline_menu,
                                         kb_client_inline_menu_info,
                                         kb_client_inline_basket_menu,
-                                        kb_client_order_menu,
+                                        kb_client_inline_order_menu,
                                         )

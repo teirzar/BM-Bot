@@ -15,4 +15,7 @@ from functions.client_functions import (get_tg_id,
                                         get_text_basket,
                                         get_user_bonus,
                                         get_user_status,
+                                        is_bonus_activated,
+                                        update_user_bonus,
+                                        get_current_discount
                                         )
