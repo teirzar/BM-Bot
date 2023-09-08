@@ -12,4 +12,7 @@ from functions.client_functions import (get_tg_id,
                                         clear_basket,
                                         set_rating,
                                         get_basket,
-                                        get_text_basket)
+                                        get_text_basket,
+                                        get_user_bonus,
+                                        get_user_status,
+                                        )

@@ -8,6 +8,8 @@ from functions import (add_log,
                        clear_basket,
                        set_rating,
                        get_text_basket,
+                       get_user_bonus,
+                       get_user_status,
                        )
 from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNotModified
 from config import bot
@@ -178,7 +180,14 @@ async def client_inline_menu_button_support(callback: types.CallbackQuery):
 
         case "order":
             text, cb_text = f"ID_{user_id} зашел в оформление заказа", "Оформление заказа"
-            # не сделано !
+            bonus, text_new_message = await get_user_bonus(user_id), await get_text_basket(tg_id, user_id, full=True)
+            res = await get_user_status(user_id)
+            if type(res) == str:
+                return await callback.answer(res, show_alert=True)
+            discount, status = res
+            text_new_message += f"\nБонусный баланс: {bonus} бонусов\n" \
+                                f"Уровень кэшбека при вашем статусе <{status}> составляет: {discount}%"
+            kb, is_new_message = await kb_client_order_menu(bonus), True
 
         case "show":
             return await callback.answer("")

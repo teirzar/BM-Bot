@@ -162,11 +162,28 @@ async def set_rating(food_id, user_id, cmd) -> str | int:
     return 0
 
 
-async def get_text_basket(tg_id, user_id) -> str:
+async def get_text_basket(tg_id, user_id, full=False) -> str:
     """Функция для генерации и возврата строки с информацией о заполненности корзины пользователя"""
     basket = await get_basket(user_id)
     basket_count, total_price, food_count = await get_count(tg_id)
     text = f"В вашей корзине\n{basket_count} товара(-ов) на сумму {total_price} руб:\n\n" \
         if len(basket) else "Ваша корзина пуста."
-
+    names = {i: k for i, *k in cafe.print_table('id', 'name', 'price')}
+    if full:
+        for i, count in basket.items():
+            text += f"{names[int(i)][0]} - {count} шт. ({names[int(i)][1] * count} руб.)\n"
     return text
+
+
+async def get_user_bonus(user_id) -> int:
+    """Функция возвращает значение бонусного баланса пользователя"""
+    return users.print_table('bonus', where=f'id = {user_id}')[0][0]
+
+
+async def get_user_status(user_id) -> tuple | str:
+    """Функция возвращает текущий уровень кэшбека и статус пользователя"""
+    status = users.print_table('status', where=f'id = {user_id}')[0][0]
+    if status == 99:
+        return "Админ не может совершать заказ!"
+    discount, status_name = bonus.print_table("discount", "name")[0]
+    return discount, status_name
