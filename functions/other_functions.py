@@ -27,7 +27,7 @@ def get_owner() -> int:
     """Читает файл owner.txt в директории private.
     Внести Telegram id владельца бота!
     Чтобы узнать ID, если бот работает - команда /myid"""
-    with open('private/key.txt', 'r') as file:
+    with open('private/owner.txt', 'r') as file:
         owner = file.readline()
         return int(owner)
 
