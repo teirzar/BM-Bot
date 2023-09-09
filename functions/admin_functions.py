@@ -1,6 +1,15 @@
 from aiogram import types
 from config import bot, users
-from functions import get_order_list_text, get_basket, add_log, get_admins, get_tg_id
+from functions import get_order_list_text, get_basket, add_log, get_tg_id
+
+
+async def get_admins() -> tuple:
+    """Возвращает кортеж из администраторов бота, обращается к таблице users из базы данных"""
+    admins = users.print_table('tg_id', where='status = 99')
+    if admins:
+        tpl_out = (el[0] for el in admins)
+        return tuple(tpl_out)
+    return tuple()
 
 
 async def get_order_text(user_id, res):
@@ -39,5 +48,7 @@ async def make_admin(data) -> str | int:
         return "Неверный формат ввода! id должен состоять ТОЛЬКО из цифр!\nПример: /makeadmin 210189427"
     if (new_id, ) not in users.print_table('tg_id'):
         return "Данный пользователь не найден в системе!"
+    if new_id in await get_admins():
+        return "Данный пользователь уже администратор!"
     users.update(f'status = 99', where=f'tg_id = {new_id}')
     return new_id

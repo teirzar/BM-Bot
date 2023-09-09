@@ -1,4 +1,4 @@
-from functions.other_functions import get_time, get_token, add_log, get_admins
+from functions.other_functions import get_time, get_token, add_log
 from functions.client_functions import (get_tg_id,
                                         get_user_id,
                                         get_profile_text,
@@ -24,4 +24,4 @@ from functions.client_functions import (get_tg_id,
                                         get_order_info,
                                         get_order_status
                                         )
-from functions.admin_functions import get_order_text, decor_private, make_admin
+from functions.admin_functions import get_order_text, decor_private, make_admin, get_admins

@@ -1,7 +1,7 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from config import bot
-from functions import decor_private, add_log, make_admin
+from functions import decor_private, add_log, make_admin, get_admins
 
 
 # =======================================
@@ -17,6 +17,8 @@ async def cmd_make_admin(message: types.Message):
     if type(res) == str:
         return await message.answer(res)
     await add_log(f"TG_{message.from_user.id} назначил администратора TG_{res}")
+    for admin in await get_admins():
+        await bot.send_message(admin, f"Админ TG {message.from_user.id} назначил админа TG {res}")
     await bot.send_message(res, "Вы назначены администратором в боте BURGERMAKER.\nПоздравляем!\nАдминка: /admin")
     await message.answer("Админ назначен")
 

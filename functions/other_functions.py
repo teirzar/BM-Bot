@@ -1,5 +1,4 @@
 from datetime import datetime
-from config import users
 
 
 # current time
@@ -25,18 +24,10 @@ def get_token() -> str:
 
 
 def get_owner() -> int:
-    """читает файл owner.txt в директории private.
+    """Читает файл owner.txt в директории private.
     Внести Telegram id владельца бота!
     Чтобы узнать ID, если бот работает - команда /myid"""
     with open('private/key.txt', 'r') as file:
         owner = file.readline()
         return int(owner)
 
-
-async def get_admins() -> tuple:
-    """Возвращает кортеж из администраторов бота, обращается к таблице users из базы данных"""
-    admins = users.print_table('tg_id', where='status = 99')
-    if admins:
-        tpl_out = (el[0] for el in admins)
-        return tuple(tpl_out)
-    return tuple()
