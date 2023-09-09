@@ -1,5 +1,5 @@
 from aiogram import types
-from config import bot, users, cafe
+from config import bot, users, cafe, orders
 from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner
 
 
@@ -83,3 +83,7 @@ async def status_changer(changed_id, is_notification=False) -> int:
     base.update(f'{column} = {int(not current)}', where=f'id = {changed_id}')
     return int(not current)
 
+
+async def get_current_orders_admin() -> tuple:
+    """Функция, возвращающая список всех активных заказов"""
+    return orders.print_table('id', 'user_id', 'price', 'status', where=f'status in (1, 2, 3)')

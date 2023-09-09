@@ -7,7 +7,7 @@ from functions import get_user_bonus, get_user_status, is_bonus_activated, updat
 from functions import make_purchase, get_text_basket, get_order_text, get_prev_orders, cancel_order, get_order_info
 from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
 from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
-from keyboards import kb_client_inline_prev_orders_menu
+from keyboards import kb_client_inline_prev_orders_menu, kb_admin_order_inline_button
 
 
 # =======================================
@@ -184,7 +184,10 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
                 return await callback.answer(res, show_alert=True)
             order_id = res[-1]
             for admin in await get_admins():
-                await bot.send_message(admin, await get_order_text(user_id, res))
+                await bot.send_message(admin,
+                                       text=await get_order_text(user_id, res),
+                                       reply_markup=await kb_admin_order_inline_button(order_id),
+                                       )
             new_text_message = f"Заказ №{order_id} успешно создан и отправлен в заведение! " \
                                f"Вам будет начислен кэшбек после того, как Вы заберете заказ в заведении. " \
                                f"Когда заказ будет принят, Вам придет уведомление! " \
