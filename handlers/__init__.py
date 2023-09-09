@@ -1,3 +1,4 @@
 from handlers.client_message import register_handlers_client
 from handlers.client_callback import register_inline_handlers_client
 from handlers.admin_message import register_handlers_admin
+from handlers.admin_callback import register_inline_handlers_admin

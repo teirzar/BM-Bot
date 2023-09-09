@@ -1,5 +1,5 @@
 from aiogram import types
-from config import bot, users
+from config import bot, users, cafe
 from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner
 
 
@@ -72,3 +72,13 @@ async def show_admins() -> str:
 async def give_me_admin() -> None:
     """Функция для того чтобы владелец мог выдать себе админку"""
     users.update(f'status = 99', where=f'tg_id = {get_owner()}')
+    return
+
+
+async def status_changer(changed_id, is_notification=False) -> None:
+    """Функция для изменения одного значения в базе с 0 на 1 и наоборот"""
+    base = users if is_notification else cafe
+    column = 'notification' if is_notification else 'status'
+    current = base.print_table(column, where=f'id = {changed_id}')[0][0]
+    base.update(f'{column} = {int(not current)}', where=f'id = {changed_id}')
+    return

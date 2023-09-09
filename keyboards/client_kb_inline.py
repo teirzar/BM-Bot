@@ -27,20 +27,20 @@ async def kb_client_inline_menu(type_food, tg_id, current_id=None):
         if current_id == i:
             if is_admin:
                 ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}'),
-                        InlineKeyboardButton(" ❌" if s else " ✅", callback_data='s'),
-                        InlineKeyboardButton("✏", callback_data='edit')
+                        InlineKeyboardButton(" ❌" if s else " ✅", callback_data=f'cma_change_{i}_{type_food}'),
+                        InlineKeyboardButton("✏", callback_data=f'cma_edit_{i}_{type_food}'),
                         )
             else:
                 ikb.row(InlineKeyboardButton("ℹ", callback_data=f'cm_info_{i}'),
                         InlineKeyboardButton("➖", callback_data=f'cm_food_{i}_minus_{type_food}'),
                         InlineKeyboardButton(f"{food_count}", callback_data=f'bs_show_'),
                         InlineKeyboardButton("➕", callback_data=f'cm_food_{i}_plus_{type_food}'),
-                        InlineKeyboardButton(" ❌", callback_data=f'cm_food_{i}_delete_{type_food}')
+                        InlineKeyboardButton(" ❌", callback_data=f'cm_food_{i}_delete_{type_food}'),
                         )
     if not is_admin:
         ikb.row(InlineKeyboardButton("💵 Заказ", callback_data='bs_order_'),
                 InlineKeyboardButton(f"{basket_count}🛒, {total_price}р", callback_data='bs_open_'),
-                InlineKeyboardButton("🗑 Очистить", callback_data=f'bs_clear_{type_food}')
+                InlineKeyboardButton("🗑 Очистить", callback_data=f'bs_clear_{type_food}'),
                 )
     ikb.add(btclose)
     return ikb

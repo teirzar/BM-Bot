@@ -24,9 +24,11 @@ async def client_inline_menu(callback: types.CallbackQuery):
         case "current":
             food_id, type_food, current_id = data
             if food_id == current_id:
-                return await callback.answer("Данное блюдо уже выбрано. "
-                                             "Вы можете посмотреть информацию; добавить или отнять количество позиций; "
-                                             "а также удалить товар из корзины.", show_alert=True)
+                error = "Данное блюдо уже выбрано. Вы можете посмотреть информацию; "
+                error += ("добавить или отнять количество позиций; а также удалить товар из корзины."
+                          if tg_id not in await get_admins() else
+                          "изменить доступность товара или редактировать информацию о нем.")
+                return await callback.answer(error, show_alert=True)
             text, cb_text = f"ID_{user_id} выбрал блюдо ID_{food_id}", "Выбор блюда."
             kb = await kb_client_inline_menu(type_food, tg_id, current_id=int(food_id))
 
@@ -48,7 +50,7 @@ async def client_inline_menu(callback: types.CallbackQuery):
     await add_log(text)
 
     try:
-        return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
+        await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
             if is_new_message else await callback.message.edit_reply_markup(reply_markup=kb)
     except MessageNotModified:
         pass
@@ -130,7 +132,7 @@ async def client_inline_basket_menu(callback: types.CallbackQuery):
     await add_log(text)
 
     try:
-        return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
+        await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
             if is_new_message else await callback.message.edit_text(text=text_new_message, reply_markup=kb)
     except MessageNotModified:
         pass
