@@ -277,3 +277,61 @@ async def make_purchase(user_id, tg_id) -> str | tuple:
     orders.update(f'status = 1, price = {total_price - discount}, date_order = "{date}"',
                   where=f'user_id = {user_id} and status = 0')
     return total_price - discount, discount, lst, order_id
+
+
+async def cancel_order(order_id, admin_id=None) -> None | str:
+    """Функция для отмены заказа и генерации текста сообщения при отмене"""
+    status = await get_order_status(order_id)
+    if status not in (1, 2):
+        return
+    date = await get_time()
+    user_id, discount = orders.print_table('user_id', 'bonus', where=f'id = {order_id}')[0]
+    cancel_text = f"Ваш заказ № {order_id} был отменён"
+    if status == 1 or admin_id:
+        orders.update(f'date_end = "{date}", {f"adm_id = {admin_id}, " if admin_id else ""}status = 5',
+                      where=f'id = {order_id}')
+        cancel_text += f' администратором' if admin_id else ''
+        if discount:
+            cancel_text += f", вам возвращено {discount} бонусов на баланс."
+            users.update(f'bonus = bonus + {discount}', where=f'id = {user_id}')
+        return cancel_text
+    orders.update(f'date_end = "{date}", status = 5', where=f'id = {order_id}')
+    cancel_text += f'. Поскольку вы не дождались получения заказа, ' \
+                   f'потраченные бонусы в размере {discount} руб. на баланс не вернутся.' if discount else '.'
+    return cancel_text
+
+
+async def get_order_info(order_id):
+    """Возвращает полную информацию о заказе в архиве"""
+    order = orders.print_table('user_id', 'date_start', 'date_order', 'date_accept', 'date_end', 'body', 'price',
+                               'bonus', 'status', 'comment', where=f'id = {order_id}')
+    user_id, date_start, date_order, date_accept, date_end, body, price, discount, status, comment = order[0]
+    body_text = await get_order_list_text(await get_basket(user_id, body))
+    name_status = types_base.print_table('name', where=f'base = "orders" and typ = {status}')[0][0]
+    if not status:
+        if not price:
+            price = "будет рассчитана после совершения заказа или в момент списания бонусов."
+    txt = f"""Информация о заказе № {order_id}:
+ID пользователя: {user_id}
+Дата создания корзины: 
+{date_start}
+Дата отправки заказа в обработку: 
+{date_order}
+Дата принятия заказа: 
+{date_accept}
+Дата завершения заказа: 
+{date_end}\n
+Состав заказа:
+{body_text}\n
+Стоимость{" (с учетом скидки)" if discount else ""}: {price} руб.
+Скидка: {discount} руб.
+Статус заказа: {name_status}
+Комментарий: 
+{comment}
+"""
+    return txt
+
+
+async def get_order_status(order_id):
+    """Возвращает текущий статус заказа """
+    return orders.print_table('status', where=f'id = {order_id}')[0][0]

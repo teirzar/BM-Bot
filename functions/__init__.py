@@ -20,6 +20,9 @@ from functions.client_functions import (get_tg_id,
                                         get_current_discount,
                                         make_purchase,
                                         get_order_list_text,
-                                        get_orders
+                                        get_orders,
+                                        cancel_order,
+                                        get_order_info,
+                                        get_order_status
                                         )
 from functions.admin_functions import get_order_text

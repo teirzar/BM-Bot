@@ -4,9 +4,10 @@ from aiogram.utils.exceptions import MessageCantBeDeleted, BadRequest, MessageNo
 from config import bot
 from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_admins
 from functions import get_user_bonus, get_user_status, is_bonus_activated, update_user_bonus, get_current_discount
-from functions import make_purchase, get_text_basket, get_order_text
+from functions import make_purchase, get_text_basket, get_order_text, get_prev_orders, cancel_order, get_order_info
 from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
 from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
+from keyboards import kb_client_inline_prev_orders_menu
 
 
 # =======================================
@@ -191,6 +192,32 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
     await callback.answer(cb_text)
     return await callback.message.edit_text(text=new_text_message, reply_markup=kb)
 
+
+async def client_inline_order_cancel_button(callback: types.CallbackQuery):
+    """Хэндлер кнопки отмены заказа kb_client_inline_order_cancel_button"""
+    user_id = await get_user_id(callback)
+    user, order_id = callback.data.split("_")[1:]
+    res = await cancel_order(order_id)
+    await add_log(f'ID_{user_id} хочет отменить заказ ID_{order_id}')
+    if not res:
+        error = "Невозможно отменить заказ, который находится в корзине, либо был приготовлен, завершен или отменен."
+        return await callback.answer(error, show_alert=True)
+
+    await callback.answer(f"Отменяю заказ № {order_id}")
+    await add_log(f'ID_{user_id} отменил заказ ID_{order_id}')
+    return await callback.message.edit_text(text=res, reply_markup=None)
+
+
+async def client_inline_prev_orders_menu(callback: types.CallbackQuery):
+    """Хэндлер кнопки просмотра прошлого заказа kb_client_inline_prev_orders_menu"""
+    user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+    order_id = callback.data.split("_")[1]
+    new_text_message = await get_order_info(order_id)
+    kb = await kb_client_inline_order_cancel_button(order_id,is_return=True)
+    await add_log(f'ID_{user_id} просматривает информацию из архива о заказе ID_{order_id}')
+    await callback.answer(f"Открываю заказ № {order_id}")
+    return await callback.message.edit_text(text=new_text_message, reply_markup=kb)
+
 # =======================================
 #               END ORDER
 # =======================================
@@ -252,6 +279,11 @@ async def client_inline_menu_button_support(callback: types.CallbackQuery):
         case "show":
             return await callback.answer("")
 
+        case "return":
+            text, cb_text = f"ID_{user_id} вернулся в архив заказов", "Архив заказов"
+            text_new_message = await get_prev_orders(user_id, tg_id)
+            is_new_text, kb = True, await kb_client_inline_prev_orders_menu(user_id)
+
     await add_log(text)
     await callback.answer(cb_text)
     if is_new_message:
@@ -274,3 +306,5 @@ def register_inline_handlers_client(dp: Dispatcher):
     dp.register_callback_query_handler(client_inline_menu_button_support, Text(startswith="bs_"))
     dp.register_callback_query_handler(client_inline_basket_menu, Text(startswith="cb_"))
     dp.register_callback_query_handler(client_inline_order_menu, Text(startswith="om_"))
+    dp.register_callback_query_handler(client_inline_order_cancel_button, Text(startswith="oc_"))
+    dp.register_callback_query_handler(client_inline_prev_orders_menu, Text(startswith="order_"))
