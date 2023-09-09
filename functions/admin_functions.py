@@ -39,4 +39,5 @@ async def make_admin(data) -> str | int:
         return "Неверный формат ввода! id должен состоять ТОЛЬКО из цифр!\nПример: /makeadmin 210189427"
     if (new_id, ) not in users.print_table('tg_id'):
         return "Данный пользователь не найден в системе!"
+    users.update(f'status = 99', where=f'tg_id = {new_id}')
     return new_id
