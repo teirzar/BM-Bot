@@ -61,10 +61,10 @@ async def kb_client_inline_menu_info(food_id, tg_id):
         ikb.row(b1, b2, b3, b4, b5)
     if food_count and not is_admin:
         b6 = InlineKeyboardButton(f"➕🍟", callback_data="cmi_open_snack")
-        b7 = InlineKeyboardButton(f"{basket_count}🛒, {total_price}р", callback_data=f"bs_open_")
+        b7 = InlineKeyboardButton(f"🛒 {total_price}р", callback_data=f"bs_open_")
         b8 = InlineKeyboardButton(f"➕🥤 ", callback_data="cmi_open_drink")
         if int(typ) not in (40, 50, 60):
-            ikb.add(b7).add(b6, b8)
+            ikb.add(b6, b7, b8)
         elif int(typ) == 40:
             ikb.add(b8, b7)
         else:
@@ -144,7 +144,8 @@ async def kb_client_inline_prev_orders_menu(user_id):
 async def kb_client_inline_order_cancel_button(order_id):
     """Кнопка отмены заказа"""
     ikb = InlineKeyboardMarkup()
-    return ikb.add(InlineKeyboardButton("Отменить заказ ❌", callback_data=f"order_cancel_{order_id}"))
+    ikb.add(InlineKeyboardButton(f"Отменить заказ №{order_id} ❌", callback_data=f"order_cancel_{order_id}"))
+    return ikb.add(btclose)
 
 # =======================================
 #               END ORDER

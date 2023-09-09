@@ -185,7 +185,7 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
                                "Если у Вас возникнут вопросы по заказу, позвоните нам, либо заполните форму обратной " \
                                "связи в настройках в нашем боте.\n\nСпасибо, что выбрали нас!"
             text, cb_text = f"ID_{user_id} оформил заказ ID_{order_id}", "Отправляю заказ в заведение"
-            kb = None
+            kb = await kb_client_inline_order_cancel_button(order_id)
 
     await add_log(text)
     await callback.answer(cb_text)

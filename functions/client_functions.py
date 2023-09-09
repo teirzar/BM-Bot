@@ -130,7 +130,7 @@ async def set_order(user_id, food_id, cmd) -> str | int:
                 if len(current_basket) > 11:
                     return "Нельзя одновременно добавить более 12 различных товаров!"
                 new_food = f"{current_lst} {food_id}:1"
-                orders.update(f'body = "{new_food}"', where=f'id = {order_id}')
+                orders.update(f'body = "{new_food.strip()}"', where=f'id = {order_id}')
                 return 1
             if current_basket[food_id] + 1 > 15:
                 return "Нельзя одновременно добавить более 15 порций одного блюда!"
@@ -270,6 +270,9 @@ async def make_purchase(user_id, tg_id) -> str | tuple:
     """Функция, активируемая при нажатии на подтверждение заказа, покупка товара"""
     await check_order(user_id, is_user_id=True)
     lst = orders.print_table('body', where=f'user_id = {user_id} and status = 0')[0][0]
+    lst_status_1 = orders.print_table('id', where=f'user_id = {user_id} and status = 1')
+    if len(lst_status_1) > 2:
+        return "Нельзя создавать более 3 активных заказов! Дождитесь подтверждения от заведения!"
     if not lst:
         return "В Вашей корзине нет товаров!"
     order_id = orders.print_table('id', where=f'user_id = {user_id} and status = 0')[0][0]
