@@ -11,3 +11,4 @@ from keyboards.client_kb_inline import (kb_client_inline_menu,
                                         kb_client_inline_order_cancel_button
                                         )
 from keyboards.admin_kb import kb_admin_main_menu
+from keyboards.admin_kb_inline import kb_admin_order_inline_button
