@@ -3,19 +3,16 @@ from config import users, bonus, types_base, cafe, orders
 from functions import get_time
 
 
-# get telegram id
 async def get_tg_id(message: types.Message | types.CallbackQuery) -> int:
     """Возвращает telegram id пользователя"""
     return int(message['from'].id)
 
 
-# get user id
 async def get_user_id(message: types.Message | types.CallbackQuery) -> int:
     """Возвращает id пользователя из базы данных"""
     return int(users.print_table('id', where=f"tg_id = {await get_tg_id(message)}")[0][0])
 
 
-# get admins
 async def get_admins() -> tuple:
     """Возвращает кортеж из администраторов бота, обращается к таблице users из базы данных"""
     admins = users.print_table('tg_id', where='status = 99')
@@ -25,7 +22,6 @@ async def get_admins() -> tuple:
     return tuple()
 
 
-# get profile text
 async def get_profile_text(user_id) -> str:
     """Возвращает информацию о пользователе в виде текста.
     Необходимо для функции 'Профиль инфо'. """
@@ -48,7 +44,6 @@ async def get_profile_text(user_id) -> str:
     return text
 
 
-# get prev orders text
 async def get_prev_orders(user_id, tg_id) -> str:
     """Возвращает текст о последних заказах пользователя, если его нет, возвращает текст о том, что список пуст.
     Необходимо для функции 'Мои заказы' """
