@@ -292,7 +292,7 @@ async def cancel_order(order_id, admin_id=None) -> None | str:
     return cancel_text
 
 
-async def get_order_info(order_id):
+async def get_order_info(order_id, is_admin=False):
     """Возвращает полную информацию о заказе в архиве"""
     order = orders.print_table('user_id', 'date_start', 'date_order', 'date_accept', 'date_end', 'body', 'price',
                                'bonus', 'status', 'comment', where=f'id = {order_id}')
@@ -302,24 +302,11 @@ async def get_order_info(order_id):
     if not status:
         if not price:
             price = "будет рассчитана после совершения заказа или в момент списания бонусов."
-    txt = f"""Информация о заказе № {order_id}:
-ID пользователя: {user_id}
-Дата создания корзины: 
-{date_start}
-Дата отправки заказа в обработку: 
-{date_order}
-Дата принятия заказа: 
-{date_accept}
-Дата завершения заказа: 
-{date_end}\n
-Состав заказа:
-{body_text}\n
-Стоимость{" (с учетом скидки)" if discount else ""}: {price} руб.
-Скидка: {discount} руб.
-Статус заказа: {name_status}
-Комментарий: 
-{comment}
-"""
+    txt = f"Информация о заказе № {order_id}:\nID пользователя: {user_id}\n\n"
+    txt += f"Дата создания корзины:\n{date_start}\nДата отправки заказа в обработку:\n{date_order}\n" \
+           f"Дата принятия заказа:\n{date_accept}\nДата завершения заказа:\n{date_end}\n" if not is_admin else ""
+    txt += f'Состав заказа:\n{body_text}\n\nСтоимость{" (с учетом скидки)" if discount else ""}: {price} руб.\n' \
+           f'Скидка: {discount} руб.\nСтатус заказа: {name_status}\nКомментарий:\n{comment}\n'
     return txt
 
 

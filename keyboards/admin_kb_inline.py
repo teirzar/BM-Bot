@@ -24,7 +24,7 @@ async def kb_admin_order_inline_button(order_id):
         ikb.add(b4, b5)
     else:
         ikb.add(b2 if is_accepted else b1, b3)
-    return ikb
+    return ikb.add(btclose)
 
 
 async def kb_admin_current_orders_inline_menu():

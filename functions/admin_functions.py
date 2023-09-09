@@ -87,3 +87,8 @@ async def status_changer(changed_id, is_notification=False) -> int:
 async def get_current_orders_admin() -> tuple:
     """Функция, возвращающая список всех активных заказов"""
     return orders.print_table('id', 'user_id', 'price', 'status', where=f'status in (1, 2, 3)')
+
+
+async def admin_order_work(order_id, tg_id) -> tuple:
+    """Функция, для обработки заказов и работой с ними, переключение статусов заказа"""
+    ...
