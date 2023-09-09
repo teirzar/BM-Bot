@@ -2,6 +2,22 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from config import bot
 from functions import decor_private, add_log, set_admin, get_admins, get_owner, show_admins, get_tg_id, give_me_admin
+from keyboards import kb_admin_main_menu
+
+
+# =======================================
+#            MAIN ADMIN MENU
+# =======================================
+
+@decor_private
+async def cmd_admin_main_menu(message: types.Message):
+    """Функция вызова меню /admin"""
+    tg_id = await get_tg_id(message)
+    return await bot.send_message(tg_id, "Панель администратора", reply_markup=await kb_admin_main_menu())
+
+# =======================================
+#           END MAIN ADMIN MENU
+# =======================================
 
 
 # =======================================
@@ -68,6 +84,8 @@ async def cmd_give_me_admin(message: types.Message):
 # ====================== LOADING ======================
 def register_handlers_admin(dp: Dispatcher):
     """Регистрация хэндлеров"""
+    dp.register_message_handler(cmd_admin_main_menu, commands=['admin'])
+
     dp.register_message_handler(cmd_make_admin, commands=['makeadmin'])
     dp.register_message_handler(cmd_show_admins, commands=['showadmins'])
     dp.register_message_handler(cmd_delete_admin, commands=['deleteadmin'])
