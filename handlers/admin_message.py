@@ -6,22 +6,26 @@ from keyboards import kb_admin_main_menu, kb_admin_current_orders_inline_menu
 
 
 # =======================================
-#            MAIN ADMIN MENU
+#                STATIC
 # =======================================
 
 @decor_private
-async def cmd_admin_main_menu(message: types.Message):
-    """Функция вызова меню /admin"""
-    return await message.answer("Панель администратора", reply_markup=await kb_admin_main_menu())
+async def cmd_admin_static(message: types.Message):
+    """Функция для обработки простых команд"""
+    cmd, tg_id = message.text, await get_tg_id(message)
+
+    match cmd:
+        case "/admin":
+            new_text_message, kb = "Панель администратора", await kb_admin_main_menu()
+        case "📂Заказы":
+            new_text_message, kb = "Выберите нужный заказ", await kb_admin_current_orders_inline_menu()
+
+    await add_log(f"TG_{tg_id} зашел в меню [{cmd[1:]}]")
+    return await message.answer(new_text_message, reply_markup=kb)
 
 # =======================================
-#           END MAIN ADMIN MENU
+#               END STATIC
 # =======================================
-
-@decor_private
-async def cmd_admin_show_order(message: types.Message):
-    """Функция для просмотра активных заказов"""
-    return await message.answer("Выберите нужный заказ", reply_markup=await kb_admin_current_orders_inline_menu())
 
 
 # =======================================
@@ -88,11 +92,10 @@ async def cmd_give_me_admin(message: types.Message):
 # ====================== LOADING ======================
 def register_handlers_admin(dp: Dispatcher):
     """Регистрация хэндлеров"""
-    dp.register_message_handler(cmd_admin_main_menu, commands=['admin'])
+    dp.register_message_handler(cmd_admin_static, commands=['admin'])
+    dp.register_message_handler(cmd_admin_static, Text(equals="📂Заказы"))
 
     dp.register_message_handler(cmd_make_admin, commands=['makeadmin'])
     dp.register_message_handler(cmd_show_admins, commands=['showadmins'])
     dp.register_message_handler(cmd_delete_admin, commands=['deleteadmin'])
     dp.register_message_handler(cmd_give_me_admin, commands=['givemeadmin'])
-
-    dp.register_message_handler(cmd_admin_show_order, Text(equals="📂 Заказы"))

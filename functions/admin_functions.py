@@ -32,7 +32,7 @@ def decor_private(func):
             await add_log(f"TG_{tg_id} [успешный вход] [{func.__name__}]")
             await func(message)
         else:
-            await add_log(f"TG_{tg_id} [неуспешно] {func.__name__}")
+            await add_log(f"TG_{tg_id} [неуспешно] [{func.__name__}]")
             await bot.send_message(tg_id, "Доступ закрыт.")
         return
     return wrapper
