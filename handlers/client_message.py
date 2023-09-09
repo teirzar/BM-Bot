@@ -113,6 +113,22 @@ async def cmd_client_cafe_menu(message: types.Message):
 # =======================================
 
 
+# =======================================
+#                 OTHER
+# =======================================
+
+async def cmd_get_tg_id(message: types.Message):
+    """Функция для вызова в чат tg_id пользователя"""
+    tg_id = await get_tg_id(message)
+    await add_log(f"TG_{tg_id} вызвал свой Telegram ID")
+    await message.reply(message.from_user.id)
+
+
+# =======================================
+#               END OTHER
+# =======================================
+
+
 # ====================== LOADING ======================
 def register_handlers_client(dp: Dispatcher):
     """Регистрация хэндлеров"""
@@ -144,6 +160,8 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🌯 Шаверма"))
     dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🌭 Хот-Дог"))
     dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🥤Напитки"))
+
+    dp.register_message_handler(cmd_get_tg_id, commands=['myid'])
 
 
 
