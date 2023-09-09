@@ -14,8 +14,9 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
     match cmd:
         case "change":
             food_id, type_food = data
-            await status_changer(food_id)
-            text, cb_text = f"TG_{tg_id} сменил доступность блюда ID_{food_id}", f"Изменено"
+            res = await status_changer(food_id)
+            res = 'в наличии' if res else 'нет в наличии'
+            text, cb_text = f"TG_{tg_id} сменил доступность блюда ID_{food_id} на [{res}]", f"Изменено на [{res}]"
             kb = await kb_client_inline_menu(type_food, tg_id, current_id=int(food_id))
 
         case "edit":

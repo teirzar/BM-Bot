@@ -2,6 +2,7 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
 from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
+from functions import status_changer
 from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
 from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 
@@ -123,6 +124,13 @@ async def cmd_get_tg_id(message: types.Message):
     return await message.reply(message.from_user.id)
 
 
+async def cmd_client_notifications_button(message: types.Message):
+    """Функция для включения и отключения уведомлений пользователем"""
+    user_id = await get_user_id(message)
+    res = ("ы", "")[await status_changer(user_id, is_notification=True)]
+    await add_log(f"ID_{user_id} в{res}ключил уведомления.")
+    return await message.answer(f"Уведомления были успешно в{res}ключены.")
+
 # =======================================
 #               END OTHER
 # =======================================
@@ -161,3 +169,4 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(cmd_client_cafe_menu_option, Text(equals="🥤Напитки"))
 
     dp.register_message_handler(cmd_get_tg_id, commands=['myid'])
+    dp.register_message_handler(cmd_client_notifications_button, Text(equals="🔔 Уведомления"))

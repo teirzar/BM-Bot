@@ -75,10 +75,11 @@ async def give_me_admin() -> None:
     return
 
 
-async def status_changer(changed_id, is_notification=False) -> None:
+async def status_changer(changed_id, is_notification=False) -> int:
     """Функция для изменения одного значения в базе с 0 на 1 и наоборот"""
     base = users if is_notification else cafe
     column = 'notification' if is_notification else 'status'
     current = base.print_table(column, where=f'id = {changed_id}')[0][0]
     base.update(f'{column} = {int(not current)}', where=f'id = {changed_id}')
-    return
+    return int(not current)
+
