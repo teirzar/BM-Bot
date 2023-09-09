@@ -164,8 +164,11 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
                 await callback.message.edit_text(res)
                 return await callback.answer(res, show_alert=True)
 
-            text, cb_text = f"ID_{user_id} списал бонусы", "Бонусы списаны!"
             new_price, user_bonus, current_discount = res
+
+            text = f"ID_{user_id} списал бонусы в количестве {current_discount} руб."
+            cb_text = f"{current_discount} бонусов списаны!"
+
             new_text_message = await get_text_basket(tg_id, user_id, full=True)
             new_text_message += f"\nБонусный баланс: {user_bonus}\n" \
                                 f"Скидка составила: {current_discount}\n" \
