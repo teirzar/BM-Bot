@@ -48,8 +48,8 @@ async def client_inline_menu(callback: types.CallbackQuery):
     await add_log(text)
 
     try:
-        await bot.send_message(tg_id, text=text_new_message, reply_markup=kb) if is_new_message else \
-            await callback.message.edit_reply_markup(reply_markup=kb)
+        return await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
+            if is_new_message else await callback.message.edit_reply_markup(reply_markup=kb)
     except MessageNotModified:
         pass
 
