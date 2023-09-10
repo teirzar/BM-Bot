@@ -36,7 +36,7 @@ async def client_write_message_reply(message: types.Message, state: FSMContext):
     now = await get_time()
     user_message = data['text'].replace('"', "''")
     messages.write('tg_id', 'message', 'time', values=f'{tg_id}, "{user_message}", "{now}"')
-    message_id = messages.print_table('id', where=f'tg_id = {tg_id} and time = "{now}"')[0][0]
+    message_id = messages.print_table('id', where=f'tg_id = {tg_id}', order_by='id DESC LIMIT 1')[0][0]
     await message.reply(f"Сообщение отправлено! Спасибо!", reply_markup=await kb_client_settings_menu())
     for admin in await get_admins():
         await bot.send_message(admin, f"Новый отзыв\nText: {user_message}\nFrom: ID_{user_id}",
@@ -78,7 +78,8 @@ async def client_edit_profile_reply(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data["value"] = message.text
     value = data["value"].replace('"', "''").strip("+")
-    log_error_text, kb = f"ID_{user_id} не удалось изменить имя на [{value}]", await kb_client_settings_menu()
+    log_error_text = f"ID_{user_id} не удалось изменить [{ClientEditProfile.column}] на [{value}]"
+    kb = await kb_client_settings_menu()
 
     if ClientEditProfile.column == 'name':
         if len(value) not in range(2, 21):
