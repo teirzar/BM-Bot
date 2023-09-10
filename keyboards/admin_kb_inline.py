@@ -56,3 +56,23 @@ async def kb_admin_edit_cafe_inline_menu(food_id):
 # =======================================
 #                END CAFE
 # =======================================
+
+
+# =======================================
+#                MESSAGES
+# =======================================
+
+async def kb_admin_answer_message_inline_button(message_id, is_submenu=True):
+    """Функция выбора действий с сообщением"""
+    ikb = InlineKeyboardMarkup(row_width=2)
+    b1 = InlineKeyboardButton("Ответить", callback_data=f"kama_reply_{message_id}")
+    b2 = InlineKeyboardButton("Прочитано", callback_data=f"kama_read_{message_id}")
+    ikb.row(b1, b2)
+    if is_submenu:
+        ikb.add(InlineKeyboardButton("Назад", callback_data=f"kama_back_"))
+    ikb.insert(btclose)
+    return ikb
+
+# =======================================
+#               END MESSAGES
+# =======================================
