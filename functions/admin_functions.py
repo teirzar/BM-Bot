@@ -183,3 +183,13 @@ async def get_text_message(message_id) -> str:
 async def is_read(message_id) -> bool:
     """Возвращает булевое значение True если сообщение прочитано, и False если не прочитано"""
     return bool(messages.print_table('adm_id', where=f'id = {message_id}')[0][0])
+
+
+async def make_message_read(tg_id, message_id) -> str | None:
+    """Функция для отметки о прочтении сообщения, возвращает строку,
+    если сообщение уже было прочитано или на него был дан ответ"""
+    if await is_read(message_id):
+        return "Сообщение уже было прочитано, или на него был дан ответ."
+    now = await get_time()
+    messages.update(f'answer_time = "{now}", adm_id = {tg_id}', where=f'id = {message_id}')
+    return

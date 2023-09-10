@@ -39,4 +39,5 @@ from functions.admin_functions import (get_order_text,
                                        get_current_messages_admin,
                                        get_text_message,
                                        is_read,
+                                       make_message_read,
                                        )
