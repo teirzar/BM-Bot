@@ -1,8 +1,9 @@
 from aiogram import types, Dispatcher
 from config import bot
 from aiogram.dispatcher.filters import Text
-from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work
-from keyboards import kb_client_inline_menu, kb_admin_order_inline_button
+from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work, get_admins
+from functions import check_admin_status
+from keyboards import kb_client_inline_menu, kb_admin_order_inline_button, kb_client_inline_order_cancel_button
 
 
 # =======================================
@@ -11,6 +12,10 @@ from keyboards import kb_client_inline_menu, kb_admin_order_inline_button
 async def client_inline_menu_admin(callback: types.CallbackQuery):
     """Функция-хэндлер клавиатуры kb_client_inline_menu, кнопки администратора"""
     tg_id = await get_tg_id(callback)
+    check = await check_admin_status(tg_id)
+    if check:
+        await add_log(f'TG_{tg_id} пытался воспользоваться функцией [client_inline_menu_admin]')
+        return await callback.answer(check, show_alert=True)
     cmd, *data = callback.data.split("_")[1:]
     match cmd:
         case "change":
@@ -39,26 +44,40 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
 async def admin_order_inline_handler(callback: types.CallbackQuery):
     """Функция предназначенная администраторам для работы с заказами пользователей"""
     tg_id = await get_tg_id(callback)
+    check = await check_admin_status(tg_id)
+    if check:
+        await add_log(f'TG_{tg_id} пытался воспользоваться функцией [client_inline_menu_admin]')
+        return await callback.answer(check, show_alert=True)
     cmd, order_id = callback.data.split("_")[1:]
     is_new_message = False
 
     match cmd:
         case "accept" | "complete" | "cancel" | "successfully" | "unsuccessfully":
             text, cb_text = f"TG_{tg_id} нажал на кнопку {cmd} в заказе ID_{order_id}", "Успешно!"
-            text_for_user, text_for_admins = await admin_order_work(order_id, tg_id)
-            ...
+            res = await admin_order_work(tg_id, order_id, cmd)
+            if type(res) == str:
+                return await callback.answer(res, show_alert=True)
+            text_for_admins, text_for_user, user_tg = res
+            for admin in await get_admins():
+                await bot.send_message(admin, text_for_admins)
+            await bot.send_message(user_tg, text_for_user,
+                                   reply_markup=await kb_client_inline_order_cancel_button(order_id))
+            kb = await kb_admin_order_inline_button(order_id)
+            new_text_message = await get_order_info(order_id, is_admin=True)
+
         case "show":
             text, cb_text = f"TG_{tg_id} просматривает информацию о заказе ID_{order_id}", "Открываю заказ."
             kb, is_new_message = await kb_admin_order_inline_button(order_id), True
             text_new_message = await get_order_info(order_id, is_admin=True)
 
     await add_log(text)
-    await callback.message.edit_reply_markup(reply_markup=kb) if not is_new_message else \
+    await callback.message.edit_text(text=new_text_message, reply_markup=kb) if not is_new_message else \
         await bot.send_message(tg_id, text_new_message, reply_markup=kb)
     return await callback.answer(cb_text)
 # =======================================
 #              END ORDERS
 # =======================================
+
 
 # ====================== LOADING ======================
 def register_inline_handlers_admin(dp: Dispatcher):

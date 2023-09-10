@@ -1,6 +1,6 @@
 from aiogram import types
-from config import bot, users, cafe, orders
-from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner
+from config import bot, users, cafe, orders, types_base, bonus
+from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order
 
 
 async def get_admins() -> tuple:
@@ -89,6 +89,63 @@ async def get_current_orders_admin() -> tuple:
     return orders.print_table('id', 'user_id', 'price', 'status', where=f'status in (1, 2, 3)')
 
 
-async def admin_order_work(order_id, tg_id) -> tuple:
+async def admin_order_work(tg_id, order_id, cmd) -> tuple | str:
     """Функция, для обработки заказов и работой с ними, переключение статусов заказа"""
-    ...
+    order_data = orders.print_table('date_order', 'date_accept', 'date_complete', 'date_end', 'user_id', 'price',
+                                    where=f'id = {order_id}')
+    date_order, date_accept, date_complete, date_end, user_id, price = order_data[0]
+    user_tg = users.print_table('tg_id', where=f'id = {user_id}')[0][0]
+    date_now = await get_time()
+
+    if date_end:
+        return "Заказ был завершен или отменен."
+
+    match cmd:
+
+        case "accept":
+            if any([date_accept, date_complete, date_end]):
+                return "Не удалось принять заказ, он уже был принят ранее."
+            new_date, new_status = "date_accept", 2
+            text_for_user = "Ваш заказ начали готовить! Ожидание займет не менее 10 минут!"
+
+        case "complete":
+            if any([date_complete, date_end]):
+                return "Не удалось отметить готовность заказа. Заказ уже готов."
+            new_date, new_status = "date_complete", 3
+            text_for_user = "Ваш заказ готов! Спешите получить его, пока не остыл! 😊😊😊\nПриятного аппетита!"
+
+        case "cancel" | "unsuccessfully":
+            new_date, new_status = "date_end", 5
+            if cmd == "cancel":
+                if date_complete:
+                    return "Не удалось отменить заказ. Заказ уже готов."
+                text_for_user = await cancel_order(order_id, admin_id=tg_id)
+                return f"Заказ № {order_id} отменен администратором TG_{tg_id}", text_for_user, user_tg
+            text_for_user = "Вы не забрали свой заказ в заведении. Заказ отменен. Бонусы возвращены не будут."
+
+        case "successfully":
+            new_date, new_status = "date_end", 4
+            user_status = users.print_table('status', where=f'id = {user_id}')[0][0]
+            discount = bonus.print_table('discount', where=f'status = {user_status}')[0][0] if user_status != 99 else 20
+            cashback = int((price/100)*discount)
+            users.update(f'bonus = bonus + {cashback}, total_price = total_price + {price}', where=f'id = {user_id}')
+            text_for_user = f"Заказ успешно завершен!\nСпасибо за заказ!\nНа ваш счет зачислено {cashback} бонусов."
+            if user_status not in (3, 99):
+                current_total_price = users.print_table('total_price', where=f'id = {user_id}')[0][0]
+                next_total_price, next_discount, next_name = bonus.print_table('price', 'discount', 'name',
+                                                                               where=f'status = {user_status + 1}')[0]
+                if current_total_price >= next_total_price:
+                    users.update(f'status = {user_status + 1}', where=f'id = {user_id}')
+                    text_for_user += f'\n\nПоздравляем!\nВаш статус обновлен до [{next_name}]!\n' \
+                                     f'Теперь ваш уровень кэшбека составляет {next_discount}% от заказа! 😊\n' \
+                                     f'Спасибо, что остаетесь с нами!'
+
+    name_status = types_base.print_table('name', where=f'base = "orders" and typ = {new_status}')[0][0]
+    orders.update(f'status = {new_status}, {new_date} = "{date_now}", adm_id = {tg_id}', where=f'id = {order_id}')
+    return f"Статус заказа ID_{order_id} успешно обновлен до статуса [{name_status}]", text_for_user, user_tg
+
+
+async def check_admin_status(tg_id) -> str | None:
+    """Проверяет, есть ли админ-статус у юзера"""
+    if tg_id not in await get_admins():
+        return "Данная функция доступна только администраторам."
