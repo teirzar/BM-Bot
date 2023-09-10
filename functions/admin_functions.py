@@ -154,3 +154,8 @@ async def check_admin_status(tg_id) -> str | None:
 async def get_cafe_column_names() -> dict:
     """Функция предназначена для русифицированного вывода названий колонок из таблицы cafe"""
     return dict(types_base.print_table('typ', 'name', where='base = "cafe_column"'))
+
+
+async def get_current_food_value(food_id, column):
+    """Функция по возврату конкретного значения блюда из базы, по id объекта и названию колонки"""
+    return cafe.print_table(column, where=f'id = {food_id}')[0][0]
