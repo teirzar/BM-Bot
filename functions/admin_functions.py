@@ -171,3 +171,15 @@ def inline_private(func):
 async def get_current_messages_admin() -> tuple:
     """Функция, возвращающая список всех неотвеченных сообщений от пользователей"""
     return messages.print_table('id', 'tg_id', 'time', where=f'adm_id is NULL')
+
+
+async def get_text_message(message_id) -> str:
+    """Функция предназначена для генерации и вывода текста сообщения от пользователя администратору"""
+    tg_id, message, date = messages.print_table('tg_id', 'message', 'time', where=f'id = {message_id}')[0]
+    user_id, sep = users.print_table('id', where=f'tg_id = {tg_id}')[0][0], f'\n{"=" * 15}\n'
+    return f'Сообщение ID_{message_id}.\nОт: ID_{user_id} (TG_{tg_id})\n{sep}Text: <{message}>{sep}\nДата: {date}'
+
+
+async def is_read(message_id) -> bool:
+    """Возвращает булевое значение True если сообщение прочитано, и False если не прочитано"""
+    return bool(messages.print_table('adm_id', where=f'id = {message_id}')[0][0])

@@ -37,4 +37,6 @@ from functions.admin_functions import (get_order_text,
                                        get_current_food_value,
                                        inline_private,
                                        get_current_messages_admin,
+                                       get_text_message,
+                                       is_read,
                                        )

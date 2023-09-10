@@ -3,10 +3,10 @@ from config import bot
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import MessageNotModified
 from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work, get_admins
-from functions import get_food_text, inline_private
+from functions import get_food_text, inline_private, get_text_message
 from keyboards import kb_client_inline_menu, kb_admin_order_inline_button, kb_client_inline_order_cancel_button
-from keyboards import kb_admin_edit_cafe_inline_menu
-
+from keyboards import kb_admin_edit_cafe_inline_menu, kb_admin_answer_message_inline_button
+from keyboards import kb_admin_current_messages_inline_menu
 
 # =======================================
 #                CAFE MENU
@@ -40,7 +40,6 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
         pass
     return await callback.answer(cb_text)
 
-
 # =======================================
 #              END CAFE MENU
 # =======================================
@@ -71,7 +70,7 @@ async def admin_order_inline_handler(callback: types.CallbackQuery):
             new_text_message = await get_order_info(order_id, is_admin=True)
 
         case "show":
-            text, cb_text = f"TG_{tg_id} просматривает информацию о заказе ID_{order_id}", "Открываю заказ."
+            text, cb_text = f"TG_{tg_id} просматривает информацию о заказе ID_{order_id}", "Открываю заказ"
             kb, is_new_message = await kb_admin_order_inline_button(order_id), True
             text_new_message = await get_order_info(order_id, is_admin=True)
 
@@ -79,8 +78,37 @@ async def admin_order_inline_handler(callback: types.CallbackQuery):
     await callback.message.edit_text(text=new_text_message, reply_markup=kb) if not is_new_message else \
         await bot.send_message(tg_id, text_new_message, reply_markup=kb)
     return await callback.answer(cb_text)
+
 # =======================================
 #              END ORDERS
+# =======================================
+
+
+# =======================================
+#                MESSAGES
+# =======================================
+@inline_private
+async def admin_current_messages_inline_menu(callback: types.CallbackQuery):
+    """Функция предназначенная администраторам для работы с сообщениями от пользователей"""
+    tg_id = await get_tg_id(callback)
+    cmd, message_id = callback.data.split("_")[1:]
+    is_new_message = False
+
+    match cmd:
+        case "read":
+            ...
+        case "open":
+            text, cb_text = f"TG_{tg_id} просматривает сообщение ID_{message_id}", "Открываю сообщение"
+            is_new_message, text_new_message = True, await get_text_message(message_id)
+            kb = await kb_admin_answer_message_inline_button(message_id)
+
+    await add_log(text)
+    await callback.message.edit_reply_markup(reply_markup=kb) if not is_new_message else \
+        await bot.send_message(tg_id, text_new_message, reply_markup=kb)
+    return await callback.answer(cb_text)
+
+# =======================================
+#              END MESSAGES
 # =======================================
 
 
@@ -89,3 +117,4 @@ def register_inline_handlers_admin(dp: Dispatcher):
     """Регистрация хэндлеров"""
     dp.register_callback_query_handler(client_inline_menu_admin, Text(startswith="cma_"))
     dp.register_callback_query_handler(admin_order_inline_handler, Text(startswith="koa_"))
+    dp.register_callback_query_handler(admin_current_messages_inline_menu, Text(startswith="kama_"))

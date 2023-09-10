@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from functions import get_order_status, get_current_orders_admin, get_cafe_column_names, get_current_messages_admin
+from functions import is_read
 from keyboards import btclose
 
 
@@ -70,15 +71,14 @@ async def kb_admin_current_messages_inline_menu():
     return ikb.add(btclose)
 
 
-async def kb_admin_answer_message_inline_button(message_id, is_submenu=True):
+async def kb_admin_answer_message_inline_button(message_id):
     """Функция выбора действий с сообщением"""
     ikb = InlineKeyboardMarkup(row_width=2)
-    b1 = InlineKeyboardButton("Ответить", callback_data=f"kama_reply_{message_id}")
+    b1 = InlineKeyboardButton("Ответить", callback_data=f"rma_{message_id}")
     b2 = InlineKeyboardButton("Прочитано", callback_data=f"kama_read_{message_id}")
-    ikb.row(b1, b2)
-    if is_submenu:
-        ikb.add(InlineKeyboardButton("Назад", callback_data=f"kama_back_"))
-    ikb.insert(btclose)
+    if not await is_read(message_id):
+        ikb.row(b1, b2)
+    ikb.add(btclose)
     return ikb
 
 # =======================================
