@@ -145,12 +145,6 @@ async def admin_order_work(tg_id, order_id, cmd) -> tuple | str:
     return f"Статус заказа ID_{order_id} успешно обновлен до статуса [{name_status}]", text_for_user, user_tg
 
 
-async def check_admin_status(tg_id) -> str | None:
-    """Проверяет, есть ли админ-статус у юзера"""
-    if tg_id not in await get_admins():
-        return "Данная функция доступна только администраторам."
-
-
 async def get_cafe_column_names() -> dict:
     """Функция предназначена для русифицированного вывода названий колонок из таблицы cafe"""
     return dict(types_base.print_table('typ', 'name', where='base = "cafe_column"'))
@@ -159,3 +153,16 @@ async def get_cafe_column_names() -> dict:
 async def get_current_food_value(food_id, column):
     """Функция по возврату конкретного значения блюда из базы, по id объекта и названию колонки"""
     return cafe.print_table(column, where=f'id = {food_id}')[0][0]
+
+
+def inline_private(func):
+    """Декоратор для установки приватности inline-команд"""
+    async def wrapper(callback: types.CallbackQuery):
+        tg_id = await get_tg_id(callback)
+        if tg_id not in await get_admins():
+            await add_log(f'TG_{tg_id} [неуспешно] [{func.__name__}]')
+            await callback.message.delete()
+            return await callback.answer("Данная функция доступна только администраторам.", show_alert=True)
+        await func(callback)
+        return
+    return wrapper

@@ -33,7 +33,7 @@ from functions.admin_functions import (get_order_text,
                                        status_changer,
                                        get_current_orders_admin,
                                        admin_order_work,
-                                       check_admin_status,
                                        get_cafe_column_names,
                                        get_current_food_value,
+                                       inline_private,
                                        )
