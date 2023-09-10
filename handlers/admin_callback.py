@@ -1,9 +1,11 @@
 from aiogram import types, Dispatcher
 from config import bot
 from aiogram.dispatcher.filters import Text
+from aiogram.utils.exceptions import MessageNotModified
 from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work, get_admins
-from functions import check_admin_status
+from functions import check_admin_status, get_food_text
 from keyboards import kb_client_inline_menu, kb_admin_order_inline_button, kb_client_inline_order_cancel_button
+from keyboards import kb_admin_edit_cafe_inline_menu
 
 
 # =======================================
@@ -17,6 +19,7 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
         await add_log(f'TG_{tg_id} пытался воспользоваться функцией [client_inline_menu_admin]')
         return await callback.answer(check, show_alert=True)
     cmd, *data = callback.data.split("_")[1:]
+    is_new_message = False
     match cmd:
         case "change":
             food_id, type_food = data
@@ -26,10 +29,17 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
             kb = await kb_client_inline_menu(type_food, tg_id, current_id=int(food_id))
 
         case "edit":
-            ...
+            food_id, type_food = data
+            text, cb_text = f"TG_{tg_id} хочет отредактировать блюдо ID_{food_id}", f"Редактировать блюдо."
+            text_new_message, image = await get_food_text(food_id)
+            kb, is_new_message = await kb_admin_edit_cafe_inline_menu(food_id, type_food), True
 
     await add_log(text)
-    await callback.message.edit_reply_markup(reply_markup=kb)
+    try:
+        await bot.send_photo(tg_id, photo=image, caption=text_new_message, reply_markup=kb, parse_mode='html') \
+            if is_new_message else await callback.message.edit_reply_markup(reply_markup=kb)
+    except MessageNotModified:
+        pass
     return await callback.answer(cb_text)
 
 

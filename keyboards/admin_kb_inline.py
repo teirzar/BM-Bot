@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from functions import get_order_status, get_current_orders_admin
+from functions import get_order_status, get_current_orders_admin, get_cafe_column_names
 from keyboards import btclose
 
 
@@ -39,4 +39,18 @@ async def kb_admin_current_orders_inline_menu():
 
 # =======================================
 #              END ORDERS
+# =======================================
+
+
+# =======================================
+#                  CAFE
+# =======================================
+async def kb_admin_edit_cafe_inline_menu(food_id, type_food):
+    ikb = InlineKeyboardMarkup(row_width=2)
+    for column, name in (await get_cafe_column_names()).items():
+        ikb.insert(InlineKeyboardButton(name, callback_data=f"kea_edit_{column}_{food_id}"))
+    return ikb.add((InlineKeyboardButton("Назад", callback_data=f"kea_back_{type_food}_{food_id}")), btclose)
+
+# =======================================
+#                END CAFE
 # =======================================

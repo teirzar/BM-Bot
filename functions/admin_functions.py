@@ -149,3 +149,8 @@ async def check_admin_status(tg_id) -> str | None:
     """Проверяет, есть ли админ-статус у юзера"""
     if tg_id not in await get_admins():
         return "Данная функция доступна только администраторам."
+
+
+async def get_cafe_column_names() -> dict:
+    """Функция предназначена для русифицированного вывода названий колонок из таблицы cafe"""
+    return dict(types_base.print_table('typ', 'name', where='base = "cafe_column"'))
