@@ -50,7 +50,7 @@ async def kb_admin_edit_cafe_inline_menu(food_id):
     """Клавиатура для выбора колонки для редактирования блюда"""
     ikb = InlineKeyboardMarkup(row_width=2)
     for column, name in (await get_cafe_column_names()).items():
-        ikb.insert(InlineKeyboardButton(name, callback_data=f"kea_edit_{column}_{food_id}"))
+        ikb.insert(InlineKeyboardButton(name, callback_data=f"kea_{column}_{food_id}"))
     return ikb.add(btclose)
 
 # =======================================
