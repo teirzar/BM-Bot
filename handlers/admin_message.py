@@ -2,7 +2,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from config import bot
 from functions import decor_private, add_log, set_admin, get_admins, get_owner, show_admins, get_tg_id, give_me_admin
-from keyboards import kb_admin_main_menu, kb_admin_current_orders_inline_menu
+from keyboards import kb_admin_main_menu, kb_admin_current_orders_inline_menu, kb_admin_current_messages_inline_menu
 
 
 # =======================================
@@ -19,6 +19,8 @@ async def cmd_admin_static(message: types.Message):
             new_text_message, kb = "Панель администратора", await kb_admin_main_menu()
         case "📂Заказы":
             new_text_message, kb = "Выберите нужный заказ", await kb_admin_current_orders_inline_menu()
+        case "🗄Обращения":
+            new_text_message, kb = "Список всех непрочитанных сообщений:", await kb_admin_current_messages_inline_menu()
 
     await add_log(f"TG_{tg_id} зашел в меню [{cmd[1:]}]")
     return await message.answer(new_text_message, reply_markup=kb)
@@ -94,6 +96,8 @@ def register_handlers_admin(dp: Dispatcher):
     """Регистрация хэндлеров"""
     dp.register_message_handler(cmd_admin_static, commands=['admin'])
     dp.register_message_handler(cmd_admin_static, Text(equals="📂Заказы"))
+    dp.register_message_handler(cmd_admin_static, Text(equals="🗄Обращения"))
+    dp.register_message_handler(cmd_admin_static, Text(equals="💬Рассылка"))
 
     dp.register_message_handler(cmd_make_admin, commands=['makeadmin'])
     dp.register_message_handler(cmd_show_admins, commands=['showadmins'])

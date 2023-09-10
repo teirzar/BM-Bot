@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from functions import get_order_status, get_current_orders_admin, get_cafe_column_names
+from functions import get_order_status, get_current_orders_admin, get_cafe_column_names, get_current_messages_admin
 from keyboards import btclose
 
 
@@ -61,6 +61,14 @@ async def kb_admin_edit_cafe_inline_menu(food_id):
 # =======================================
 #                MESSAGES
 # =======================================
+
+async def kb_admin_current_messages_inline_menu():
+    """Клавиатура, предназначенная для вывода в сообщение непрочитанных сообщений"""
+    ikb = InlineKeyboardMarkup()
+    for i, t, d in await get_current_messages_admin():
+        ikb.add(InlineKeyboardButton(f"ID{i}: TG {t}, {d[5:].replace('-', '/', 1)}", callback_data=f'kama_open_{i}'))
+    return ikb.add(btclose)
+
 
 async def kb_admin_answer_message_inline_button(message_id, is_submenu=True):
     """Функция выбора действий с сообщением"""

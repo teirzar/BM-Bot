@@ -17,4 +17,5 @@ from keyboards.admin_kb_inline import (kb_admin_order_inline_button,
                                        kb_admin_current_orders_inline_menu,
                                        kb_admin_edit_cafe_inline_menu,
                                        kb_admin_answer_message_inline_button,
+                                       kb_admin_current_messages_inline_menu,
                                        )

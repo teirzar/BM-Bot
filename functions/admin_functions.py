@@ -1,5 +1,5 @@
 from aiogram import types
-from config import bot, users, cafe, orders, types_base, bonus
+from config import bot, users, cafe, orders, types_base, bonus, messages
 from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order
 
 
@@ -166,3 +166,8 @@ def inline_private(func):
         await func(callback)
         return
     return wrapper
+
+
+async def get_current_messages_admin() -> tuple:
+    """Функция, возвращающая список всех неотвеченных сообщений от пользователей"""
+    return messages.print_table('id', 'tg_id', 'time', where=f'adm_id is NULL')
