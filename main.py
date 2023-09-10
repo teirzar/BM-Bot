@@ -9,11 +9,12 @@ async def on_startup(_):
 
 if __name__ == "__main__":
     from config import dp
-    from handlers import register_handlers_client, register_inline_handlers_client, register_handlers_admin
-    from handlers import register_inline_handlers_admin, register_handlers_storage_admin
+    from handlers import register_handlers_client, register_inline_handlers_client, register_handlers_storage_client
+    from handlers import register_inline_handlers_admin, register_handlers_storage_admin, register_handlers_admin
 
     register_handlers_client(dp)
     register_inline_handlers_client(dp)
+    register_handlers_storage_client(dp)
     register_handlers_admin(dp)
     register_inline_handlers_admin(dp)
     register_handlers_storage_admin(dp)
