@@ -146,7 +146,7 @@ async def kb_client_inline_order_cancel_button(order_id, is_return=False):
     ikb = InlineKeyboardMarkup()
     status = await get_order_status(order_id)
     b1 = InlineKeyboardButton(f"Отменить заказ №{order_id} ❌", callback_data=f"oc_user_{order_id}")
-    if not is_return or status in (1, 2):
+    if status in (1, 2):
         ikb.add(b1)
     if is_return:
         return ikb.add(InlineKeyboardButton("Назад", callback_data="bs_return_"), btclose)

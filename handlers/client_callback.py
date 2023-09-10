@@ -213,6 +213,8 @@ async def client_inline_order_cancel_button(callback: types.CallbackQuery):
 
     await callback.answer(f"Отменяю заказ № {order_id}")
     await add_log(f'ID_{user_id} отменил заказ ID_{order_id}')
+    for admin in await get_admins():
+        await bot.send_message(admin, f'Пользователь ID_{user_id} отменил заказ ID_{order_id}!')
     return await callback.message.edit_text(text=res, reply_markup=None)
 
 
@@ -221,7 +223,7 @@ async def client_inline_prev_orders_menu(callback: types.CallbackQuery):
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
     order_id = callback.data.split("_")[1]
     new_text_message = await get_order_info(order_id)
-    kb = await kb_client_inline_order_cancel_button(order_id,is_return=True)
+    kb = await kb_client_inline_order_cancel_button(order_id, is_return=True)
     await add_log(f'ID_{user_id} просматривает информацию из архива о заказе ID_{order_id}')
     await callback.answer(f"Открываю заказ № {order_id}")
     return await callback.message.edit_text(text=new_text_message, reply_markup=kb)

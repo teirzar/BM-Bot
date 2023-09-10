@@ -210,7 +210,7 @@ async def get_user_status(user_id) -> tuple | str:
     status = users.print_table('status', where=f'id = {user_id}')[0][0]
     if status == 99:
         return "Админ не может совершать заказ!"
-    discount, status_name = bonus.print_table("discount", "name")[0]
+    discount, status_name = bonus.print_table("discount", "name", where=f'status = {status}')[0]
     return discount, status_name
 
 

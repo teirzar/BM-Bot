@@ -9,12 +9,14 @@ from keyboards import btclose
 async def kb_admin_order_inline_button(order_id):
     """Клавиши администратора, прикрепляемые к окну с заказом"""
     status = await get_order_status(order_id)
+    ikb = InlineKeyboardMarkup()
+    if status in (4, 5):
+        return ikb.add(btclose)
     is_accepted = is_complete = False
     if status == 2:
         is_accepted = True
     if status == 3:
         is_complete = True
-    ikb = InlineKeyboardMarkup()
     b1 = InlineKeyboardButton("Принять", callback_data=f'koa_accept_{order_id}')
     b2 = InlineKeyboardButton("Заказ готов!", callback_data=f'koa_complete_{order_id}')
     b3 = InlineKeyboardButton("Отменить", callback_data=f'koa_cancel_{order_id}')
