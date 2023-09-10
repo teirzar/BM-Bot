@@ -32,7 +32,8 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
             food_id, type_food = data
             text, cb_text = f"TG_{tg_id} хочет отредактировать блюдо ID_{food_id}", f"Редактировать блюдо."
             text_new_message, image = await get_food_text(food_id)
-            kb, is_new_message = await kb_admin_edit_cafe_inline_menu(food_id, type_food), True
+            text_new_message += "\n\n<b>Выберите то, что необходимо редактировать:</b>"
+            kb, is_new_message = await kb_admin_edit_cafe_inline_menu(food_id), True
 
     await add_log(text)
     try:

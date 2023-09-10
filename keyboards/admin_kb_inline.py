@@ -30,6 +30,7 @@ async def kb_admin_order_inline_button(order_id):
 
 
 async def kb_admin_current_orders_inline_menu():
+    """Клавиатура, предназначенная для вывода в сообщение активных заказов"""
     ikb = InlineKeyboardMarkup()
     current_orders = await get_current_orders_admin()
     types = ["🛒", "🔄", "🕓", "🍴", "✅", "❌"]
@@ -45,11 +46,12 @@ async def kb_admin_current_orders_inline_menu():
 # =======================================
 #                  CAFE
 # =======================================
-async def kb_admin_edit_cafe_inline_menu(food_id, type_food):
+async def kb_admin_edit_cafe_inline_menu(food_id):
+    """Клавиатура для выбора колонки для редактирования блюда"""
     ikb = InlineKeyboardMarkup(row_width=2)
     for column, name in (await get_cafe_column_names()).items():
         ikb.insert(InlineKeyboardButton(name, callback_data=f"kea_edit_{column}_{food_id}"))
-    return ikb.add((InlineKeyboardButton("Назад", callback_data=f"kea_back_{type_food}_{food_id}")), btclose)
+    return ikb.add(btclose)
 
 # =======================================
 #                END CAFE
