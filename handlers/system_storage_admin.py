@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram import types, Dispatcher
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.exceptions import BotBlocked
-from config import bot, messages, users, cafe
+from config import bot, messages, users, cafe, orders
 from functions import get_tg_id, add_log, get_current_food_value, get_admins, get_user_id, decor_private, get_time
 from keyboards import kb_cancel_button, kb_client_main_menu, kb_client_cafe_menu, kb_admin_yes_no_button
 from keyboards import kb_admin_main_menu
@@ -166,6 +166,58 @@ async def admin_mailing_confirm_reply(message: types.Message, state: FSMContext)
 # ========================================================
 
 
+# ========================================================
+#                     MESSAGE TO USER
+# ========================================================
+class AdminWriteToUser(StatesGroup):
+    message = State()
+    user_tg_id = None
+    user_id = None
+
+
+async def admin_write_to_user(callback: types.CallbackQuery):
+    order_id = callback.data.split("_")[-1]
+    admin_tg_id = await get_tg_id(callback)
+    user_id = orders.print_table('user_id', where=f'id = {order_id}')[0][0]
+    res = users.print_table('tg_id', 'phone', 'username', 'name', where=f'id = {user_id}')
+    user_tg_id, phone, username, name = res[0]
+    AdminWriteToUser.user_tg_id, AdminWriteToUser.user_id = user_tg_id, user_id
+    await AdminWriteToUser.message.set()
+    await add_log(f"TG_{admin_tg_id} хочет отправить сообщение пользователю ID_{user_tg_id} из заказа ID_{order_id}")
+    reply_msg = f"<b>Пользователь ID {user_id}.</b>\nИмя: {name}\nТелеграм: @{username}\nТелефон: {phone}\n\n" \
+                f"Напишите сообщение пользователю, если необходимо. '<code>Отмена</code>', чтобы выйти из формы."
+    await bot.send_message(admin_tg_id, reply_msg, reply_markup=await kb_cancel_button(), parse_mode='html')
+    await callback.answer("Открываю форму сообщения пользователю.")
+
+
+async def admin_write_to_user_reply(message: types.Message, state: FSMContext):
+    adm_tg_id = await get_tg_id(message)
+    async with state.proxy() as data:
+        data["text"] = message.text.replace('"', "''")
+
+    if len(data['text']) == 0:
+        await state.finish()
+        text_error = "Нельзя отправить пустое сообщение."
+        return await message.answer(text_error, reply_markup=ReplyKeyboardRemove())
+
+    now = await get_time()
+    messages.write('tg_id', 'adm_id', 'adm_message', 'answer_time',
+                   values=f'''{AdminWriteToUser.user_tg_id}, {adm_tg_id}, "{data['text']}", "{now}"''')
+
+    log_msg = f"Администратор TG_{adm_tg_id} отправил сообщение пользователю ID_{AdminWriteToUser.user_id}"
+    for admin in await get_admins():
+        await bot.send_message(admin, log_msg + f":\n\n{data['text']}")
+
+    await bot.send_message(AdminWriteToUser.user_tg_id, f"Вам сообщение от администрации:\n{data['text']}")
+    await message.answer("Сообщение было отправлено пользователю", reply_markup=await kb_admin_main_menu())
+    await add_log(log_msg)
+    await state.finish()
+
+# ========================================================
+#                    END MESSAGE TO USER
+# ========================================================
+
+
 # ====================== LOADING ======================
 def register_handlers_storage_admin(dp: Dispatcher):
     dp.register_message_handler(cancel_button, Text(equals="отмена", ignore_case=True), state="*")
@@ -175,5 +227,6 @@ def register_handlers_storage_admin(dp: Dispatcher):
     dp.register_message_handler(admin_mailing, Text(equals="💬Рассылка"))
     dp.register_message_handler(admin_mailing_reply, state=AdminMailing.text)
     dp.register_message_handler(admin_mailing_confirm_reply, state=AdminMailing.confirm)
-
+    dp.register_callback_query_handler(admin_write_to_user, Text(startswith="write_user_"))
+    dp.register_message_handler(admin_write_to_user_reply, state=AdminWriteToUser.message)
 

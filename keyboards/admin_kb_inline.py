@@ -13,6 +13,7 @@ async def kb_admin_order_inline_button(order_id):
     ikb = InlineKeyboardMarkup()
     if status in (4, 5):
         return ikb.add(btclose)
+    ikb.add(InlineKeyboardButton("Связаться", callback_data=f'write_user_{order_id}'))
     is_accepted = is_complete = False
     if status == 2:
         is_accepted = True
