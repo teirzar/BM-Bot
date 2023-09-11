@@ -16,7 +16,7 @@ from keyboards import kb_admin_main_menu
 
 async def cancel_button(message: types.Message, state: FSMContext):
     """Функция отмены машины состояний"""
-    tg_id = message['from'].id
+    tg_id = await get_tg_id(message)
     user_id = await get_user_id(message)
     current_state = await state.get_state()
     if current_state is None:
@@ -137,22 +137,26 @@ async def admin_mailing_confirm_reply(message: types.Message, state: FSMContext)
         data["confirm"] = message.text.lower().replace('"', "''").strip("'")
 
     if data["confirm"] == "нет":
-        await message.answer(f'Успешно отменено')
-        return await state.finish()
+        log_text, msg_text = "отменил сообщение", 'Успешно отменено'
 
-    now = await get_time()
-    messages.update(f'answer_time = "{now}"', where=f'id = {AdminMailing.message_id}')
-    all_users = [tg[0] for tg in users.print_table('tg_id', where=f'notification = 1')]
-    errors = ""
+    elif data["confirm"] == "да":
+        messages.update(f'answer_time = "{await get_time()}"', where=f'id = {AdminMailing.message_id}')
+        all_users = [tg[0] for tg in users.print_table('tg_id', where=f'notification = 1')]
+        errors = ""
 
-    for user in all_users:
-        try:
-            await bot.send_message(user, data['text'])
-        except BotBlocked:
-            errors += f"TG_{user}, "
+        for user in all_users:
+            try:
+                await bot.send_message(user, data['text'])
+            except BotBlocked:
+                errors += f"TG_{user}, "
+        log_text = "отправил сообщение"
+        number = len(all_users) - len(errors.split())
+        msg_text = f'Сообщение успешно разослано {number} пользователям\nОшибки при отправке: {errors}'
 
-    await add_log(f"TG_{tg_id} сделал отправил сообщение ID_{AdminMailing.message_id} всем пользователям")
-    msg_text = f'Сообщение успешно разослано {len(all_users)} пользователям\nОшибки при отправке: {errors}'
+    else:
+        log_text, msg_text = "ошибка в отправке сообщения", "Необходимо подтвердить или отменить отправку."
+
+    await add_log(f"TG_{tg_id} {log_text} ID_{AdminMailing.message_id} всем пользователям")
     await message.answer(msg_text, reply_markup=await kb_admin_main_menu())
     return await state.finish()
 
