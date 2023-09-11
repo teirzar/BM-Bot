@@ -7,6 +7,7 @@ from functions import get_food_text, inline_private, get_text_message, make_mess
 from keyboards import kb_client_inline_menu, kb_admin_order_inline_button, kb_client_inline_order_cancel_button
 from keyboards import kb_admin_edit_cafe_inline_menu, kb_admin_answer_message_inline_button
 
+
 # =======================================
 #                CAFE MENU
 # =======================================
@@ -17,6 +18,7 @@ async def client_inline_menu_admin(callback: types.CallbackQuery):
     cmd, *data = callback.data.split("_")[1:]
     is_new_message = False
     match cmd:
+
         case "change":
             food_id, type_food = data
             res = await status_changer(food_id)
@@ -53,8 +55,8 @@ async def admin_order_inline_handler(callback: types.CallbackQuery):
     tg_id = await get_tg_id(callback)
     cmd, order_id = callback.data.split("_")[1:]
     is_new_message = False
-
     match cmd:
+
         case "accept" | "complete" | "cancel" | "successfully" | "unsuccessfully":
             text, cb_text = f"TG_{tg_id} нажал на кнопку {cmd} в заказе ID_{order_id}", "Успешно!"
             res = await admin_order_work(tg_id, order_id, cmd)
@@ -92,8 +94,8 @@ async def admin_current_messages_inline_menu(callback: types.CallbackQuery):
     tg_id = await get_tg_id(callback)
     cmd, message_id = callback.data.split("_")[1:]
     is_new_message = False
-    kb = await kb_admin_answer_message_inline_button(message_id)
     match cmd:
+
         case "read":
             text, cb_text = f"TG_{tg_id} отметил прочтённым сообщение ID_{message_id}", "Прочитано!"
             res = await make_message_read(tg_id, message_id)
@@ -101,9 +103,12 @@ async def admin_current_messages_inline_menu(callback: types.CallbackQuery):
                 return await callback.answer(res, show_alert=True)
             for admin in await get_admins():
                 await bot.send_message(admin, f"Администратор {text}\n\n{await get_text_message(message_id)}")
+            kb = await kb_admin_answer_message_inline_button(message_id)
+
         case "open":
             text, cb_text = f"TG_{tg_id} просматривает сообщение ID_{message_id}", "Открываю сообщение"
             is_new_message, text_new_message = True, await get_text_message(message_id)
+            kb = await kb_admin_answer_message_inline_button(message_id)
 
     await add_log(text)
     await callback.message.edit_reply_markup(reply_markup=kb) if not is_new_message else \
