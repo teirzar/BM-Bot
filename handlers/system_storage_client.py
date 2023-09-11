@@ -2,7 +2,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram import types, Dispatcher
-from functions import add_log, get_time, get_user_id, get_tg_id, get_admins
+from functions import add_log, get_time, get_user_id, get_tg_id, get_admins, get_text_message
 from config import bot, users, messages
 from keyboards import kb_client_settings_menu, kb_admin_answer_message_inline_button, kb_cancel_button
 
@@ -38,9 +38,9 @@ async def client_write_message_reply(message: types.Message, state: FSMContext):
     messages.write('tg_id', 'message', 'time', values=f'{tg_id}, "{user_message}", "{now}"')
     message_id = messages.print_table('id', where=f'tg_id = {tg_id}', order_by='id DESC LIMIT 1')[0][0]
     await message.reply(f"Сообщение отправлено! Спасибо!", reply_markup=await kb_client_settings_menu())
+    adm_kb = await kb_admin_answer_message_inline_button(message_id)
     for admin in await get_admins():
-        await bot.send_message(admin, f"Новый отзыв\nText: {user_message}\nFrom: ID_{user_id}",
-                               reply_markup=await kb_admin_answer_message_inline_button(message_id, is_submenu=False))
+        await bot.send_message(admin, f"Новый отзыв\n{await get_text_message(message_id)}", reply_markup=adm_kb)
     await add_log(f"ID_{user_id} Отправил отзыв ID_{message_id}")
     await state.finish()
 

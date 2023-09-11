@@ -97,7 +97,6 @@ def register_handlers_admin(dp: Dispatcher):
     dp.register_message_handler(cmd_admin_static, commands=['admin'])
     dp.register_message_handler(cmd_admin_static, Text(equals="📂Заказы"))
     dp.register_message_handler(cmd_admin_static, Text(equals="🗄Обращения"))
-    dp.register_message_handler(cmd_admin_static, Text(equals="💬Рассылка"))
 
     dp.register_message_handler(cmd_make_admin, commands=['makeadmin'])
     dp.register_message_handler(cmd_show_admins, commands=['showadmins'])
