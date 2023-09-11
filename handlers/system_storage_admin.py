@@ -2,10 +2,12 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram import types, Dispatcher
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.exceptions import BotBlocked
 from config import bot, messages, users, cafe
-from functions import get_tg_id, add_log, get_current_food_value, get_admins, get_user_id
-from keyboards import kb_cancel_button, kb_client_main_menu, kb_client_cafe_menu
+from functions import get_tg_id, add_log, get_current_food_value, get_admins, get_user_id, decor_private, get_time
+from keyboards import kb_cancel_button, kb_client_main_menu, kb_client_cafe_menu, kb_admin_yes_no_button
+from keyboards import kb_admin_main_menu
 
 
 # ========================================================
@@ -96,9 +98,78 @@ async def admin_edit_food_reply(message: types.Message, state: FSMContext):
 # ========================================================
 
 
+# ========================================================
+#                        MAILING
+# ========================================================
+class AdminMailing(StatesGroup):
+    """Рассылка сообщений пользователям"""
+    text = State()
+    confirm = State()
+    message_id = None
+
+
+@decor_private
+async def admin_mailing(message: types.Message):
+    tg_id = await get_tg_id(message)
+    await AdminMailing.text.set()
+    await add_log(f"TG_{tg_id} зашел в меню ввода сообщения всем пользователям")
+    msg_text = "Напишите сообщение, которое нужно отправить всем пользователям, у которых включены уведомления\n" \
+               "Чтобы выйти из формы отправки - напишите <code>Отмена</code>"
+    await message.reply(msg_text, reply_markup=ReplyKeyboardRemove(), parse_mode='html')
+
+
+async def admin_mailing_reply(message: types.Message, state: FSMContext):
+    tg_id = await get_tg_id(message)
+    async with state.proxy() as data:
+        data["text"] = message.text.replace('"', "''")
+    messages.write('adm_id', 'message', values=f'''{tg_id}, "{data['text']}"''')
+    AdminMailing.message_id = messages.print_table('id', where=f'adm_id = {tg_id}', order_by='id DESC LIMIT 1')[0][0]
+    await add_log(f"TG_{tg_id} сделал запись сообщения для пользователей ID_{AdminMailing.message_id}")
+    msg_text = f"Проверьте правильность ввода:\n\n{data['text']}\n\n" \
+               f"<code>Да</code> - для отправки, <code>Нет</code> - отменить"
+    await message.answer(msg_text, reply_markup=await kb_admin_yes_no_button(), parse_mode='html')
+    await AdminMailing.next()
+
+
+async def admin_spam_confirm_reply(message: types.Message, state: FSMContext):
+    tg_id = await get_tg_id(message)
+    async with state.proxy() as data:
+        data["confirm"] = message.text.lower().replace('"', "''").strip("'")
+
+    if data["confirm"] == "нет":
+        await message.answer(f'Успешно отменено')
+        return await state.finish()
+
+    now = await get_time()
+    messages.update(f'answer_time = "{now}"', where=f'id = {AdminMailing.message_id}')
+    all_users = [tg[0] for tg in users.print_table('tg_id', where=f'notification = 1')]
+    errors = ""
+
+    for user in all_users:
+        try:
+            await bot.send_message(user, data['text'])
+        except BotBlocked:
+            errors += f"TG_{user}, "
+
+    await add_log(f"TG_{tg_id} сделал отправил сообщение ID_{AdminMailing.message_id} всем пользователям")
+    msg_text = f'Сообщение успешно разослано {len(all_users)} пользователям\nОшибки при отправке: {errors}'
+    await message.answer(msg_text, reply_markup=await kb_admin_main_menu())
+    return await state.finish()
+
+
+# ========================================================
+#                      END MAILING
+# ========================================================
+
+
 # ====================== LOADING ======================
 def register_handlers_storage_admin(dp: Dispatcher):
     dp.register_message_handler(cancel_button, Text(equals="отмена", ignore_case=True), state="*")
     dp.register_message_handler(cancel_button, commands=["отмена", "назад"], state="*")
     dp.register_callback_query_handler(admin_edit_food, Text(startswith="kea_"))
     dp.register_message_handler(admin_edit_food_reply, state=AdminEditFood.value)
+    dp.register_message_handler(admin_mailing, Text(equals="💬Рассылка"))
+    dp.register_message_handler(admin_mailing_reply, state=AdminMailing.text)
+    dp.register_message_handler(admin_spam_confirm_reply, state=AdminMailing.confirm)
+
+
