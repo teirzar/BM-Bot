@@ -17,9 +17,10 @@ async def get_order_text(user_id, res):
     res - tuple, в котором 3 переменные:
     price заказа, discount - скидка, lst - список товаров пользователя, order_id - id заказа в базе"""
     price, discount, lst, order_id = res
+    comment = orders.print_table('comment', where=f'id = {order_id}')[0][0]
     text = f"Новый заказ ID_{order_id} от пользователя ID_{user_id}!\nСписок позиций:\n\n"
     text += await get_order_list_text(await get_basket(user_id, lst=lst))
-    text += f"\nСумма заказа: {price}\nСкидка составила: {discount}"
+    text += f"\nСумма заказа: {price}\nСкидка составила: {discount}\n\nКомментарий к заказу:\n{comment}"
     return text
 
 
