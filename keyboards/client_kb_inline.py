@@ -119,7 +119,7 @@ async def kb_client_inline_order_menu(user_id, bonus, current_discount):
     if bonus > 0 and not current_discount:
         b1 = InlineKeyboardButton("Списать бонусы", callback_data=f"om_bonus")
         ikb.add(b1)
-    b2 = InlineKeyboardButton("Комментарий", callback_data=f"om_comment")
+    b2 = InlineKeyboardButton("Комментарий", callback_data=f"write_comment")
     b3 = InlineKeyboardButton("Все верно", callback_data=f"om_buy")
     ikb.add(b2, b3).add(btclose)
     return ikb

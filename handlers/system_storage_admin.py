@@ -131,7 +131,7 @@ async def admin_mailing_reply(message: types.Message, state: FSMContext):
     await AdminMailing.next()
 
 
-async def admin_spam_confirm_reply(message: types.Message, state: FSMContext):
+async def admin_mailing_confirm_reply(message: types.Message, state: FSMContext):
     tg_id = await get_tg_id(message)
     async with state.proxy() as data:
         data["confirm"] = message.text.lower().replace('"', "''").strip("'")
@@ -170,6 +170,6 @@ def register_handlers_storage_admin(dp: Dispatcher):
     dp.register_message_handler(admin_edit_food_reply, state=AdminEditFood.value)
     dp.register_message_handler(admin_mailing, Text(equals="💬Рассылка"))
     dp.register_message_handler(admin_mailing_reply, state=AdminMailing.text)
-    dp.register_message_handler(admin_spam_confirm_reply, state=AdminMailing.confirm)
+    dp.register_message_handler(admin_mailing_confirm_reply, state=AdminMailing.confirm)
 
 
