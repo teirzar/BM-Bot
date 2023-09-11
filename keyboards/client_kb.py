@@ -1,11 +1,12 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from functions import get_admins
 
 
 # =======================================
 #               MAIN MENU
 # =======================================
 
-async def kb_client_main_menu():
+async def kb_client_main_menu(tg_id):
     """Главное меню"""
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     b1 = KeyboardButton("🍔 Меню ресторана 🌯")
@@ -15,7 +16,10 @@ async def kb_client_main_menu():
     b5 = KeyboardButton("⚙ Настройки")
     b6 = KeyboardButton("💼 О нас")
     b7 = KeyboardButton("☎ Позвонить")
+    b8 = KeyboardButton("/admin")
     kb.add(b1).row(b2, b3).row(b4, b5).row(b6, b7)
+    if tg_id in await get_admins():
+        kb.add(b8)
     return kb
 
 # =======================================

@@ -22,7 +22,7 @@ async def cancel_button(message: types.Message, state: FSMContext):
     if current_state is None:
         return
     await add_log(f"ID_{user_id}: [Отмена {current_state}]")
-    await bot.send_message(tg_id, f"Отменено.", reply_markup=await kb_client_main_menu())
+    await bot.send_message(tg_id, f"Отменено.", reply_markup=await kb_client_main_menu(tg_id))
     return await state.finish()
 
 # ========================================================

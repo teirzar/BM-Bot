@@ -14,15 +14,16 @@ from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 async def cmd_client_start_menu(message: types.Message):
     """Стартовое меню, запись аккаунта в БД"""
     tg_id = await get_tg_id(message)
+    text, msg = f"ID_{await get_user_id(message)} зашел в главное меню", "Главное меню"
+
     if (tg_id, ) not in users.print_table('tg_id'):
         username, name = message["from"].username, message["from"].first_name
-        text = f" Новый пользователь! TG: {username}; ID_{tg_id}"
+        text, msg = f" Новый пользователь! TG: {username}; ID_{tg_id}", START_MESSAGE
         users.write('tg_id', 'username', 'name', values=f'{tg_id}, "{username}", "{name}"')
-        await add_log(text)
         [await bot.send_message(admin, text) for admin in await get_admins()]
-        return await bot.send_message(tg_id, START_MESSAGE, parse_mode='html', reply_markup=await kb_client_main_menu())
-    await add_log(f"ID_{await get_user_id(message)} зашел в главное меню")
-    return await bot.send_message(tg_id, "Главное меню", reply_markup=await kb_client_main_menu())
+
+    await add_log(text)
+    return await bot.send_message(tg_id, msg, parse_mode='html', reply_markup=await kb_client_main_menu(tg_id))
 
 # =======================================
 #              END MAIN MENU
@@ -82,7 +83,9 @@ async def cmd_client_static_submenu(message: types.Message):
 async def cmd_client_cafe_menu_option(message: types.Message):
     """Функция для вызова уточнения выбора в меню заведения"""
     user_id, tg_id = await get_user_id(message), await get_tg_id(message)
+
     match message.text:
+
         case "🌯 Шаверма":
             text = "Обратите внимание!\n" \
                    "Куриное филе в шавермах нашего заведения маринуется поварами и готовится на гриле.\n" \
@@ -90,12 +93,15 @@ async def cmd_client_cafe_menu_option(message: types.Message):
                    "мы не используем вертел, где мясо портится часами на открытом воздухе.\n" \
                    "Попробуйте сами и убедитесь в неповторимом вкусе!"
             b1, b2 = "🥗 Шаверма на тарелке", "🌯 Шаверма в лаваше"
+
         case "🌭 Хот-Дог":
             text = "Вы можете заказать Хот-дог как в стандартной булочке, так и в лаваше."
             b1, b2 = "🌭 Хот-Дог стандартный", "🫔 Хот-Дог в лаваше"
+
         case "🥤Напитки":
             text = "Выберите тип напитка."
             b1, b2 = "☕Горячие напитки", "🥤Холодные напитки"
+
     await add_log(f"ID_{user_id} зашел в подвыбор меню ресторана в категории {message.text[1:].strip()}")
     await bot.send_message(tg_id, text, reply_markup=await kb_client_cafe_menu_option(b1, b2))
 
