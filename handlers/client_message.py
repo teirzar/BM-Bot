@@ -2,7 +2,7 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
 from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
-from functions import status_changer
+from functions import status_changer, decor_check_username
 from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
 from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 
@@ -13,8 +13,8 @@ from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 
 async def cmd_client_start_menu(message: types.Message):
     """Стартовое меню, запись аккаунта в БД"""
-    tg_id = await get_tg_id(message)
-    text, msg = f"ID_{await get_user_id(message)} зашел в главное меню", "Главное меню"
+    tg_id = message['from'].id
+    text, msg = f"ID_{message['from'].id} зашел в главное меню", "Главное меню"
 
     if (tg_id, ) not in users.print_table('tg_id'):
         username, name = message["from"].username, message["from"].first_name
@@ -57,6 +57,7 @@ async def cmd_client_static_menu(message: types.Message):
         await bot.send_message(tg_id, text, parse_mode='html', reply_markup=kb)
 
 
+@decor_check_username
 async def cmd_client_static_submenu(message: types.Message):
     """Функция для вызова подменю основных кнопок меню"""
     user_id, tg_id = await get_user_id(message), await get_tg_id(message)
@@ -80,6 +81,7 @@ async def cmd_client_static_submenu(message: types.Message):
 #               CAFE MENU
 # =======================================
 
+@decor_check_username
 async def cmd_client_cafe_menu_option(message: types.Message):
     """Функция для вызова уточнения выбора в меню заведения"""
     user_id, tg_id = await get_user_id(message), await get_tg_id(message)

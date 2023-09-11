@@ -5,6 +5,7 @@ from config import bot
 from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_admins
 from functions import get_user_bonus, get_user_status, is_bonus_activated, update_user_bonus, get_current_discount
 from functions import make_purchase, get_text_basket, get_order_text, get_prev_orders, cancel_order, get_order_info
+from functions import decor_check_username
 from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
 from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
 from keyboards import kb_client_inline_prev_orders_menu, kb_admin_order_inline_button
@@ -148,6 +149,7 @@ async def client_inline_basket_menu(callback: types.CallbackQuery):
 #                 ORDER
 # =======================================
 
+@decor_check_username
 async def client_inline_order_menu(callback: types.CallbackQuery):
     """Хэндлер клавиатуры kb_client_inline_order_menu"""
     user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
@@ -201,6 +203,7 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
     return await callback.message.edit_text(text=new_text_message, reply_markup=kb)
 
 
+@decor_check_username
 async def client_inline_order_cancel_button(callback: types.CallbackQuery):
     """Хэндлер кнопки отмены заказа kb_client_inline_order_cancel_button"""
     user_id = await get_user_id(callback)

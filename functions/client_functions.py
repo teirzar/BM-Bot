@@ -1,6 +1,6 @@
 from aiogram import types
 from config import users, bonus, types_base, cafe, orders
-from functions import get_time
+from functions import get_time, add_log
 
 
 async def get_tg_id(message: types.Message | types.CallbackQuery) -> int:
@@ -313,3 +313,15 @@ async def get_order_info(order_id, is_admin=False):
 async def get_order_status(order_id):
     """Возвращает текущий статус заказа """
     return orders.print_table('status', where=f'id = {order_id}')[0][0]
+
+
+def decor_check_username(func):
+    """Проверка, был ли изменен username в Telegram"""
+    async def wrapper(message: types.Message | types.CallbackQuery):
+        tg_id = await get_tg_id(message)
+        username = users.print_table('username', where=f'tg_id = {tg_id}')[0][0]
+        if message["from"].username != username:
+            await add_log(f"TG_{tg_id} username изменен с [{username}] на [{message['from'].username}]")
+            users.update(f'username = "{message["from"].username}"', where=f'tg_id = {tg_id}')
+        return await func(message)
+    return wrapper
