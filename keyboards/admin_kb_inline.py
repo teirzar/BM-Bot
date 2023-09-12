@@ -13,7 +13,7 @@ async def kb_admin_order_inline_button(order_id):
     ikb = InlineKeyboardMarkup()
     if status in (4, 5):
         return ikb.add(btclose)
-    ikb.add(InlineKeyboardButton("Связаться", callback_data=f'write_user_{order_id}'))
+    ikb.add(InlineKeyboardButton("Связаться", callback_data=f'write_user_order_{order_id}'))
     is_accepted = is_complete = False
     if status == 2:
         is_accepted = True
@@ -75,7 +75,7 @@ async def kb_admin_current_messages_inline_menu():
 async def kb_admin_answer_message_inline_button(message_id):
     """Функция выбора действий с сообщением"""
     ikb = InlineKeyboardMarkup(row_width=2)
-    b1 = InlineKeyboardButton("Ответить", callback_data=f"rma_{message_id}")
+    b1 = InlineKeyboardButton("Ответить", callback_data=f"write_user_message_{message_id}")
     b2 = InlineKeyboardButton("Прочитано", callback_data=f"kama_read_{message_id}")
     if not await is_read(message_id):
         ikb.row(b1, b2)

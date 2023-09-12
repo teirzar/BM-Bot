@@ -171,23 +171,48 @@ async def admin_mailing_confirm_reply(message: types.Message, state: FSMContext)
 # ========================================================
 class AdminWriteToUser(StatesGroup):
     message = State()
+    cmd = None
     user_tg_id = None
     user_id = None
+    message_id = None
+    user_message = None
 
 
 async def admin_write_to_user(callback: types.CallbackQuery):
-    order_id = callback.data.split("_")[-1]
+    cmd, obj_id = callback.data.split("_")[2:]
     admin_tg_id = await get_tg_id(callback)
-    user_id = orders.print_table('user_id', where=f'id = {order_id}')[0][0]
-    res = users.print_table('tg_id', 'phone', 'username', 'name', where=f'id = {user_id}')
-    user_tg_id, phone, username, name = res[0]
-    AdminWriteToUser.user_tg_id, AdminWriteToUser.user_id = user_tg_id, user_id
+    kb = await kb_cancel_button()
+    match cmd:
+
+        case "order":
+            user_id = orders.print_table('user_id', where=f'id = {obj_id}')[0][0]
+            res = users.print_table('tg_id', 'phone', 'username', 'name', where=f'id = {user_id}')
+            user_tg_id, phone, username, name = res[0]
+            log_text = f"TG_{admin_tg_id} хочет отправить сообщение пользователю ID_{user_tg_id} из заказа ID_{obj_id}"
+            reply_msg = f"<b>Пользователь ID {user_id}.</b>\nИмя: {name}\nТелеграм: @{username}\nТелефон: {phone}\n\n" \
+                        f"Напишите сообщение пользователю, если необходимо."
+            cb_msg = "Открываю форму сообщения пользователю."
+
+        case "message":
+            res = messages.print_table('tg_id', 'message', 'adm_message', where=f'id = {obj_id}')[0]
+            user_tg_id, user_message, adm_message = res
+            AdminWriteToUser.message_id, AdminWriteToUser.user_message = obj_id, user_message
+            if adm_message:
+                err_msg, kb = "На это сообщение уже был дан ответ", await kb_admin_main_menu()
+                await bot.send_message(admin_tg_id, f"{err_msg}:\n\n{adm_message}", reply_markup=kb)
+                return await callback.answer(err_msg, show_alert=True)
+            user_id = users.print_table('id', where=f'tg_id = {user_tg_id}')[0][0]
+            log_text = f"TG_{admin_tg_id} хочет ответить пользователю ID_{user_tg_id} на сообщение ID_{obj_id}"
+            reply_msg = f"Сообщение от пользователя ID_{user_id}, TG_{user_tg_id}:\n\n[{user_message}].\n\n" \
+                        f"Напишите ответ на данное сообщение пользователю ID_{user_tg_id}"
+            cb_msg = "Введите ответ пользователю на обращение."
+
+    AdminWriteToUser.user_tg_id, AdminWriteToUser.user_id, AdminWriteToUser.cmd = user_tg_id, user_id, cmd
+    reply_msg += "\n\nНапишите '<code>Отмена</code>', чтобы выйти из формы."
     await AdminWriteToUser.message.set()
-    await add_log(f"TG_{admin_tg_id} хочет отправить сообщение пользователю ID_{user_tg_id} из заказа ID_{order_id}")
-    reply_msg = f"<b>Пользователь ID {user_id}.</b>\nИмя: {name}\nТелеграм: @{username}\nТелефон: {phone}\n\n" \
-                f"Напишите сообщение пользователю, если необходимо. '<code>Отмена</code>', чтобы выйти из формы."
-    await bot.send_message(admin_tg_id, reply_msg, reply_markup=await kb_cancel_button(), parse_mode='html')
-    await callback.answer("Открываю форму сообщения пользователю.")
+    await add_log(log_text)
+    await bot.send_message(admin_tg_id, reply_msg, reply_markup=kb, parse_mode='html')
+    await callback.answer(cb_msg)
 
 
 async def admin_write_to_user_reply(message: types.Message, state: FSMContext):
@@ -201,14 +226,22 @@ async def admin_write_to_user_reply(message: types.Message, state: FSMContext):
         return await message.answer(text_error, reply_markup=ReplyKeyboardRemove())
 
     now = await get_time()
-    messages.write('tg_id', 'adm_id', 'adm_message', 'answer_time',
-                   values=f'''{AdminWriteToUser.user_tg_id}, {adm_tg_id}, "{data['text']}", "{now}"''')
+    if AdminWriteToUser.cmd == "order":
+        messages.write('tg_id', 'adm_id', 'adm_message', 'answer_time',
+                       values=f'''{AdminWriteToUser.user_tg_id}, {adm_tg_id}, "{data['text']}", "{now}"''')
+        log_text, msg_text = "отправил сообщение", f"Вам сообщение от администрации:\n{data['text']}"
+    else:
+        messages.update(f'''adm_id = {adm_tg_id}, adm_message = "{data['text']}", answer_time = "{now}"''',
+                        where=f'id = {AdminWriteToUser.message_id}')
+        log_text = f"ответил на сообщение ID_{AdminWriteToUser.message_id}"
+        msg_text = f"На ваше обращение №{AdminWriteToUser.message_id} с текстом: [{AdminWriteToUser.user_message}]\n" \
+                   f"\nБыл дан ответ от администрации:\n[{data['text']}]"
 
-    log_msg = f"Администратор TG_{adm_tg_id} отправил сообщение пользователю ID_{AdminWriteToUser.user_id}"
+    log_msg = f"Администратор TG_{adm_tg_id} {log_text} пользователю ID_{AdminWriteToUser.user_id}"
     for admin in await get_admins():
         await bot.send_message(admin, log_msg + f":\n\n{data['text']}")
 
-    await bot.send_message(AdminWriteToUser.user_tg_id, f"Вам сообщение от администрации:\n{data['text']}")
+    await bot.send_message(AdminWriteToUser.user_tg_id, msg_text)
     await message.answer("Сообщение было отправлено пользователю", reply_markup=await kb_admin_main_menu())
     await add_log(log_msg)
     await state.finish()
