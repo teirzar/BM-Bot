@@ -8,9 +8,9 @@ async def get_tg_id(message: types.Message | types.CallbackQuery) -> int:
     return int(message['from'].id)
 
 
-async def get_user_id(message: types.Message | types.CallbackQuery) -> int:
+async def get_user_id(message: types.Message | types.CallbackQuery, is_tg_id=False) -> int:
     """Возвращает id пользователя из базы данных"""
-    return int(users.print_table('id', where=f"tg_id = {await get_tg_id(message)}")[0][0])
+    return int(users.print_table('id', where=f"tg_id = {message if is_tg_id else await get_tg_id(message)}")[0][0])
 
 
 async def get_profile_text(user_id) -> str:
@@ -66,7 +66,7 @@ async def get_orders(user_id) -> str:
 async def check_order(income_id, is_user_id=False):
     """Функция проверяет, есть ли заказ в базе, и если его нет, то создает заказ со статусом "В корзине",
     также попутно внося его в список заказов в базе данных пользователей"""
-    user_id = income_id if is_user_id else users.print_table('id', where=f'tg_id = {income_id}')[0][0]
+    user_id = income_id if is_user_id else await get_user_id(income_id, is_tg_id=True)
     if (user_id, ) not in orders.print_table('user_id', where=f'status = 0'):
         orders.write('user_id', 'body', 'date_start', 'status', values=f'{user_id}, "", "{await get_time()}", 0')
         order_id = orders.print_table('id', where=f'status = 0 and user_id = {user_id}')[0][0]
@@ -137,7 +137,7 @@ async def set_order(user_id, food_id, cmd) -> str | int:
 async def get_count(tg_id, current_id=None) -> tuple:
     """Функция для того, чтобы узнать какое количество конкретных позиций у пользователя в заказе,
     а так же стоимость и количество ВСЕХ товаров в корзине"""
-    user_id = users.print_table('id', where=f'tg_id = {tg_id}')[0][0]
+    user_id = await get_user_id(tg_id, is_tg_id=True)
 
     await check_order(tg_id)
 

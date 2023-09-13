@@ -1,6 +1,6 @@
 from aiogram import types
 from config import bot, users, cafe, orders, types_base, bonus, messages
-from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order
+from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order, get_user_id
 
 
 async def get_admins() -> tuple:
@@ -177,7 +177,7 @@ async def get_current_messages_admin() -> tuple:
 async def get_text_message(message_id) -> str:
     """Функция предназначена для генерации и вывода текста сообщения от пользователя администратору"""
     tg_id, message, date = messages.print_table('tg_id', 'message', 'time', where=f'id = {message_id}')[0]
-    user_id, sep = users.print_table('id', where=f'tg_id = {tg_id}')[0][0], f'\n{"=" * 15}\n'
+    user_id, sep = await get_user_id(tg_id, is_tg_id=True), f'\n{"=" * 15}\n'
     return f'Сообщение ID_{message_id}.\nОт: ID_{user_id} (TG_{tg_id})\n{sep}Text: <{message}>{sep}\nДата: {date}'
 
 

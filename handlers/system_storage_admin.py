@@ -197,7 +197,7 @@ async def admin_write_to_user(callback: types.CallbackQuery):
                 err_msg, kb = "На это сообщение уже был дан ответ", await kb_admin_main_menu()
                 await bot.send_message(admin_tg_id, f"{err_msg}:\n\n{adm_message}", reply_markup=kb)
                 return await callback.answer(err_msg, show_alert=True)
-            user_id = users.print_table('id', where=f'tg_id = {user_tg_id}')[0][0]
+            user_id = await get_user_id(user_tg_id, is_tg_id=True)
             log_text = f"TG_{admin_tg_id} хочет ответить пользователю ID_{user_tg_id} на сообщение ID_{obj_id}"
             reply_msg = f"Сообщение от пользователя ID_{user_id}, TG_{user_tg_id}:\n\n[{user_message}].\n\n" \
                         f"Напишите ответ на данное сообщение пользователю ID_{user_tg_id}"
