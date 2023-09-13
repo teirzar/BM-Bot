@@ -102,19 +102,19 @@
 таблица 6: Бонусы
 
 Таблица 1 столбцы:
-id(primary), tg\_id, username, name, phone, likes, dislikes, notification, orders, bonus, status, total\_price
+id(primary), tg_id, username, name, phone, notification, orders, bonus, status, total_price
 
 Таблица 2 столбцы: 
-id(primary), tg\_id, adm\_id, body, price, bonus, status, comment
+id(primary), user_id, date_start, date_order, adm_id, date_accept, date_complete, date_end, body, price, bonus, status, comment
 
 Таблица 3 столбцы: 
-id(primary), name, composition, weight, price, image, active
+id(primary), type, name, caption, composition, weight, price, image, status, likes, dislikes
 
 Таблица 4 столбцы:
 base, typ, name
 
 Таблица 5 столбцы:
-id(primary), tg\_id, adm\_id, message, adm\_message, time, answer\_time
+id(primary), tg_id, message, time, adm_id, adm_message, answer_time
 
 Таблица 6 столбцы:
 price, name, status, discount
