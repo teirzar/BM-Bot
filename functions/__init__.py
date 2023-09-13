@@ -24,6 +24,7 @@ from functions.client_functions import (get_tg_id,
                                         get_order_info,
                                         get_order_status,
                                         decor_check_username,
+                                        remake_order,
                                         )
 from functions.admin_functions import (get_order_text,
                                        decor_private,

@@ -292,7 +292,7 @@ async def cancel_order(order_id, admin_id=None) -> None | str:
     return cancel_text
 
 
-async def get_order_info(order_id, is_admin=False):
+async def get_order_info(order_id, is_admin=False) -> str:
     """Возвращает полную информацию о заказе в архиве"""
     order = orders.print_table('user_id', 'date_start', 'date_order', 'date_accept', 'date_end', 'body', 'price',
                                'bonus', 'status', 'comment', where=f'id = {order_id}')
@@ -310,7 +310,7 @@ async def get_order_info(order_id, is_admin=False):
     return txt
 
 
-async def get_order_status(order_id):
+async def get_order_status(order_id) -> int:
     """Возвращает текущий статус заказа """
     return orders.print_table('status', where=f'id = {order_id}')[0][0]
 
@@ -325,3 +325,10 @@ def decor_check_username(func):
             users.update(f'username = "{message["from"].username}"', where=f'tg_id = {tg_id}')
         return await func(message)
     return wrapper
+
+
+async def remake_order(order_id, user_id) -> None:
+    """Функция для кнопки "Повторить заказ" в архиве заказов."""
+    body = orders.print_table('body', where=f'id = {order_id}')[0][0]
+    await check_order(user_id, is_user_id=True)
+    orders.update(f'body = "{body}"', where=f'user_id = {user_id} and status = 0')

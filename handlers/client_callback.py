@@ -5,7 +5,7 @@ from config import bot
 from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_admins
 from functions import get_user_bonus, get_user_status, is_bonus_activated, update_user_bonus, get_current_discount
 from functions import make_purchase, get_text_basket, get_order_text, get_prev_orders, cancel_order, get_order_info
-from functions import decor_check_username
+from functions import decor_check_username, remake_order
 from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
 from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
 from keyboards import kb_client_inline_prev_orders_menu, kb_admin_order_inline_button
@@ -206,19 +206,37 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
 @decor_check_username
 async def client_inline_order_cancel_button(callback: types.CallbackQuery):
     """Хэндлер кнопки отмены заказа kb_client_inline_order_cancel_button"""
-    user_id = await get_user_id(callback)
-    user, order_id = callback.data.split("_")[1:]
-    res = await cancel_order(order_id)
-    await add_log(f'ID_{user_id} хочет отменить заказ ID_{order_id}')
-    if not res:
-        error = "Невозможно отменить заказ, который находится в корзине, либо был приготовлен, завершен или отменен."
-        return await callback.answer(error, show_alert=True)
+    user_id, tg_id = await get_user_id(callback), await get_tg_id(callback)
+    cmd, order_id = callback.data.split("_")[1:]
+    kb = None
+    match cmd:
+        case "cancel":
+            new_text_message = await cancel_order(order_id)
+            await add_log(f'ID_{user_id} хочет отменить заказ ID_{order_id}')
+            if not new_text_message:
+                error = "Невозможно отменить заказ, который находится в корзине/приготовлен/завершен/отменен."
+                return await callback.answer(error, show_alert=True)
+            log_text, cb_text = "отменил", f"Отменяю заказ № {order_id}"
+            for admin in await get_admins():
+                await bot.send_message(admin, f'Пользователь ID_{user_id} отменил заказ ID_{order_id}!')
 
-    await callback.answer(f"Отменяю заказ № {order_id}")
-    await add_log(f'ID_{user_id} отменил заказ ID_{order_id}')
-    for admin in await get_admins():
-        await bot.send_message(admin, f'Пользователь ID_{user_id} отменил заказ ID_{order_id}!')
-    return await callback.message.edit_text(text=res, reply_markup=None)
+        case "reorder":
+            await remake_order(order_id, user_id)
+            log_text, cb_text = "повторил", f"Повторяю состав заказа № {order_id}"
+            bonus, new_text_message = await get_user_bonus(user_id), await get_text_basket(tg_id, user_id, full=True)
+            res = await get_user_status(user_id)
+            if type(res) == str:
+                return await callback.answer(res, show_alert=True)
+            discount, status = res
+            new_text_message += f"\nБонусный баланс: {bonus} бонусов\n" \
+                                f"Уровень кэшбека при вашем статусе <{status}> составляет: {discount}%"
+            current_discount = await get_current_discount(user_id)
+            kb = await kb_client_inline_order_menu(user_id, bonus, current_discount)
+
+    await callback.answer(cb_text)
+    await add_log(f'ID_{user_id} {log_text} заказ ID_{order_id}')
+
+    return await callback.message.edit_text(text=new_text_message, reply_markup=kb)
 
 
 async def client_inline_prev_orders_menu(callback: types.CallbackQuery):
