@@ -5,7 +5,7 @@ from config import bot
 from functions import add_log, get_tg_id, get_user_id, get_food_text, set_order, clear_basket, set_rating, get_admins
 from functions import get_user_bonus, get_user_status, is_bonus_activated, update_user_bonus, get_current_discount
 from functions import make_purchase, get_text_basket, get_order_text, get_prev_orders, cancel_order, get_order_info
-from functions import decor_check_username, remake_order
+from functions import decor_check_username, remake_order, send_to_admins
 from keyboards import kb_client_inline_menu, kb_client_inline_menu_info, kb_client_inline_basket_menu
 from keyboards import kb_client_inline_order_menu, kb_client_inline_order_cancel_button
 from keyboards import kb_client_inline_prev_orders_menu, kb_admin_order_inline_button
@@ -185,11 +185,7 @@ async def client_inline_order_menu(callback: types.CallbackQuery):
             if type(res) == str:
                 return await callback.answer(res, show_alert=True)
             order_id = res[-1]
-            for admin in await get_admins():
-                await bot.send_message(admin,
-                                       text=await get_order_text(user_id, res),
-                                       reply_markup=await kb_admin_order_inline_button(order_id),
-                                       )
+            await send_to_admins(await get_order_text(user_id, res), await kb_admin_order_inline_button(order_id))
             new_text_message = f"Заказ №{order_id} успешно создан и отправлен в заведение! " \
                                f"Вам будет начислен кэшбек после того, как Вы заберете заказ в заведении. " \
                                f"Когда заказ будет принят, Вам придет уведомление! " \
@@ -217,8 +213,8 @@ async def client_inline_order_cancel_button(callback: types.CallbackQuery):
                 error = "Невозможно отменить заказ, который находится в корзине/приготовлен/завершен/отменен."
                 return await callback.answer(error, show_alert=True)
             log_text, cb_text = "отменил", f"Отменяю заказ № {order_id}"
-            for admin in await get_admins():
-                await bot.send_message(admin, f'Пользователь ID_{user_id} отменил заказ ID_{order_id}!')
+            text_to_admins = f'Пользователь ID_{user_id} отменил заказ ID_{order_id}!'
+            await send_to_admins(text_to_admins)
 
         case "reorder":
             await remake_order(order_id, user_id)

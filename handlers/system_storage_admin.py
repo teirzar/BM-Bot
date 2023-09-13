@@ -5,7 +5,7 @@ from aiogram import types, Dispatcher
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils.exceptions import BotBlocked
 from config import bot, messages, users, cafe, orders
-from functions import get_tg_id, add_log, get_current_food_value, get_admins, get_user_id, decor_private, get_time
+from functions import get_tg_id, add_log, get_current_food_value, get_user_id, decor_private, get_time, send_to_admins
 from keyboards import kb_cancel_button, kb_client_main_menu, kb_client_cafe_menu, kb_admin_yes_no_button
 from keyboards import kb_admin_main_menu
 
@@ -85,12 +85,8 @@ async def admin_edit_food_reply(message: types.Message, state: FSMContext):
     change_text = f"TG_{tg_id} изменил значение [{AdminEditFood.column}] с [{AdminEditFood.current_value}] " \
                   f"на [{value}] у блюда ID_{AdminEditFood.food_id}"
     await add_log(change_text)
-
-    for admin in await get_admins():
-        await bot.send_message(admin, "Администратор " + change_text)
-
+    await send_to_admins("Администратор " + change_text)
     await message.answer('Меню заведения', reply_markup=await kb_client_cafe_menu())
-
     await state.finish()
 
 # ========================================================
@@ -238,8 +234,7 @@ async def admin_write_to_user_reply(message: types.Message, state: FSMContext):
                    f"\nБыл дан ответ от администрации:\n[{data['text']}]"
 
     log_msg = f"Администратор TG_{adm_tg_id} {log_text} пользователю ID_{AdminWriteToUser.user_id}"
-    for admin in await get_admins():
-        await bot.send_message(admin, log_msg + f":\n\n{data['text']}")
+    await send_to_admins(log_msg + f":\n\n{data['text']}")
 
     await bot.send_message(AdminWriteToUser.user_tg_id, msg_text)
     await message.answer("Сообщение было отправлено пользователю", reply_markup=await kb_admin_main_menu())

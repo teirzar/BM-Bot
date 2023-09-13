@@ -2,7 +2,7 @@ from aiogram import types, Dispatcher
 from config import bot
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import MessageNotModified
-from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work, get_admins
+from functions import get_tg_id, add_log, status_changer, get_order_info, admin_order_work, send_to_admins
 from functions import get_food_text, inline_private, get_text_message, make_message_read
 from keyboards import kb_client_inline_menu, kb_admin_order_inline_button, kb_client_inline_order_cancel_button
 from keyboards import kb_admin_edit_cafe_inline_menu, kb_admin_answer_message_inline_button
@@ -62,9 +62,8 @@ async def admin_order_inline_handler(callback: types.CallbackQuery):
             res = await admin_order_work(tg_id, order_id, cmd)
             if type(res) == str:
                 return await callback.answer(res, show_alert=True)
-            text_for_admins, text_for_user, user_tg = res
-            for admin in await get_admins():
-                await bot.send_message(admin, text_for_admins)
+            text_to_admins, text_for_user, user_tg = res
+            await send_to_admins(text_to_admins)
             await bot.send_message(user_tg, text_for_user,
                                    reply_markup=await kb_client_inline_order_cancel_button(order_id))
             kb = await kb_admin_order_inline_button(order_id)
@@ -101,8 +100,7 @@ async def admin_current_messages_inline_menu(callback: types.CallbackQuery):
             res = await make_message_read(tg_id, message_id)
             if res:
                 return await callback.answer(res, show_alert=True)
-            for admin in await get_admins():
-                await bot.send_message(admin, f"Администратор {text}\n\n{await get_text_message(message_id)}")
+            await send_to_admins(f"Администратор {text}\n\n{await get_text_message(message_id)}")
             kb = await kb_admin_answer_message_inline_button(message_id)
 
         case "open":

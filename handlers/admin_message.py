@@ -2,6 +2,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from config import bot
 from functions import decor_private, add_log, set_admin, get_admins, get_owner, show_admins, get_tg_id, give_me_admin
+from functions import send_to_admins
 from keyboards import kb_admin_main_menu, kb_admin_current_orders_inline_menu, kb_admin_current_messages_inline_menu
 
 
@@ -44,8 +45,8 @@ async def cmd_make_admin(message: types.Message):
     if type(res) == str:
         return await message.answer(res)
     await add_log(f"TG_{tg_id} назначил администратора TG_{res}")
-    for admin in await get_admins():
-        await bot.send_message(admin, f"Админ TG {tg_id} назначил админа TG {res}")
+    text_to_admins = f"Администратор TG {tg_id} назначил администратором TG {res}"
+    await send_to_admins(text_to_admins)
     await bot.send_message(res, "Вы назначены администратором в боте BURGERMAKER.\nПоздравляем!\nАдминка: /admin")
     return await message.answer("Админ назначен")
 

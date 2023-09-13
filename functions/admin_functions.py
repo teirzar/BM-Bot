@@ -194,3 +194,8 @@ async def make_message_read(tg_id, message_id) -> str | None:
     now = await get_time()
     messages.update(f'answer_time = "{now}", adm_id = {tg_id}', where=f'id = {message_id}')
     return
+
+
+async def send_to_admins(text, kb=None):
+    """Функция для отправки технологичского текста админитрации в личные сообщения от бота"""
+    [await bot.send_message(admin, text, reply_markup=kb) for admin in await get_admins()]

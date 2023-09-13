@@ -1,8 +1,8 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Text
 from config import bot, HELP_MESSAGE, START_MESSAGE, ABOUT_MESSAGE, users
-from functions import add_log, get_tg_id, get_admins, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
-from functions import status_changer, decor_check_username
+from functions import add_log, get_tg_id, get_user_id, get_prev_orders, get_profile_text, get_type_food_id
+from functions import status_changer, decor_check_username, send_to_admins
 from keyboards import kb_client_main_menu, kb_client_settings_menu, kb_client_cafe_menu, kb_client_cafe_menu_option
 from keyboards import kb_client_inline_menu, kb_client_inline_prev_orders_menu
 
@@ -20,7 +20,7 @@ async def cmd_client_start_menu(message: types.Message):
         username, name = message["from"].username, message["from"].first_name
         text, msg = f" Новый пользователь! TG: {username}; ID_{tg_id}", START_MESSAGE
         users.write('tg_id', 'username', 'name', values=f'{tg_id}, "{username}", "{name}"')
-        [await bot.send_message(admin, text) for admin in await get_admins()]
+        await send_to_admins(text)
 
     await add_log(text)
     return await bot.send_message(tg_id, msg, parse_mode='html', reply_markup=await kb_client_main_menu(tg_id))

@@ -3,7 +3,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
 from aiogram import types, Dispatcher
-from functions import add_log, get_time, get_user_id, get_tg_id, get_admins, get_text_message, get_user_bonus
+from functions import add_log, get_time, get_user_id, get_tg_id, get_text_message, get_user_bonus, send_to_admins
 from functions import get_current_discount, get_text_basket
 from config import bot, users, messages, orders
 from keyboards import kb_client_settings_menu, kb_admin_answer_message_inline_button, kb_cancel_button
@@ -42,8 +42,7 @@ async def client_write_message_reply(message: types.Message, state: FSMContext):
     message_id = messages.print_table('id', where=f'tg_id = {tg_id}', order_by='id DESC LIMIT 1')[0][0]
     await message.reply(f"Сообщение отправлено! Спасибо!", reply_markup=await kb_client_settings_menu())
     adm_kb = await kb_admin_answer_message_inline_button(message_id)
-    for admin in await get_admins():
-        await bot.send_message(admin, f"Новый отзыв\n{await get_text_message(message_id)}", reply_markup=adm_kb)
+    await send_to_admins(f"Новый отзыв\n{await get_text_message(message_id)}", kb=adm_kb)
     await add_log(f"ID_{user_id} Отправил отзыв ID_{message_id}")
     await state.finish()
 
@@ -101,8 +100,7 @@ async def client_edit_profile_reply(message: types.Message, state: FSMContext):
     log_text = f"ID_{user_id} изменил [{ClientEditProfile.column}] на [{value}]"
     await add_log(log_text)
     await message.reply(f"Успешно изменено!\nНовое значение: <b>{value}</b>", parse_mode='html', reply_markup=kb)
-    for admin in await get_admins():
-        await bot.send_message(admin, f"Пользователь {log_text}")
+    await send_to_admins(f"Пользователь {log_text}")
     return await state.finish()
 
 
