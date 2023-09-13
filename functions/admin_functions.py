@@ -1,6 +1,7 @@
 from aiogram import types
 from config import bot, users, cafe, orders, types_base, bonus, messages
-from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order, get_user_id
+from functions import get_order_list_text, get_basket, add_log, get_tg_id, get_owner, get_time, cancel_order
+from functions import get_user_id
 
 
 async def get_admins() -> tuple:

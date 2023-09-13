@@ -257,4 +257,3 @@ def register_handlers_storage_admin(dp: Dispatcher):
     dp.register_message_handler(admin_mailing_confirm_reply, state=AdminMailing.confirm)
     dp.register_callback_query_handler(admin_write_to_user, Text(startswith="write_user_"))
     dp.register_message_handler(admin_write_to_user_reply, state=AdminWriteToUser.message)
-
