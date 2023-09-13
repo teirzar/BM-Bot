@@ -30,7 +30,6 @@ class DBconnect:
                               f'содержит недопустимую колонку [{el.split(")")[0].split("(")[1]}]')
                         return True
                 else:
-                    print("Столбец [" + el + "] отсутствует в таблице")
                     return True
 
     def append_column(self, name: str, column_definition: str='') -> None:
@@ -40,7 +39,6 @@ class DBconnect:
         with sqlite3.connect(self.__src) as db:
             c = db.cursor()
             c.execute(f"""ALTER TABLE {self.__name_table} ADD {name} {column_definition};""")
-        print(f"Столбец [{name}] добавлен в таблицу [{self.__name_table}]")
 
     def print_table(self, *args, where='', order_by='', group_by='', add='') -> list[tuple]:
         if self.__check_args(args):
@@ -70,17 +68,13 @@ class DBconnect:
             c = db.cursor()
             c.execute(f"INSERT INTO {self.__name_table} {'(' + ', '.join(el for el in args) + ')' if args else ''} "
                       f"VALUES ({values});")
-        print(f"Значения [{values}] записаны в столбцы [{args}]")
 
     def delete(self, where='') -> None:
         with sqlite3.connect(self.__src) as db:
             c = db.cursor()
             c.execute(f'DELETE FROM {self.__name_table} {"WHERE " + where if where else ""}')
-        print(f"Из таблицы [{self.__name_table}] удалено [{where}]")
 
     def update(self, dbset='', where=''):
         with sqlite3.connect(self.__src) as db:
             c = db.cursor()
             c.execute(f'UPDATE {self.__name_table} SET {dbset} {"WHERE " + where if where else ""}')
-        if self.__name_table not in ("position", "cposition", "admbuilder", "orders"):
-            print(f"В талицу [{self.__name_table}] присвоены значения [{dbset}] где [{where}]")
